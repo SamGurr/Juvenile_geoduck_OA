@@ -2,7 +2,7 @@
 #Project: FFAR
 #Author: HM Putnam & Sam Gurr
 #Edited by: Sam Gurr
-#Date Last Modified: 20181224
+#Date Last Modified: 20181225
 #See Readme file for details
 
 rm(list=ls())
@@ -55,7 +55,7 @@ library(Rcmdr)          # Version: 2.5-1. Date/Publication: 2018-09-11, Depends:
 #All_growth_data.csv
 
 #set working directory--------------------------------------------------------------------------------------------------
-setwd("C:/Users/samjg/Documents/Notebook/data/Geoduck_Conditioning/RAnalysis/") #set working
+setwd("C:/Users/samjg/Documents/My_Projects/Juvenile_geoduck_OA_2018/RAnalysis/") #set working
 
 ### CONICAL Seawater chemistry Data - Analysis, Graphs, Tables (APEX DATA) ####
 
@@ -71,7 +71,7 @@ APEX_data$Date.Time <-as.POSIXct(APEX_data$Date.Time, format="%Y-%m-%d %H:%M:%S"
 #plot raw data
 plot(APEX_data$Date.Time,APEX_data$pH_T0) # tail end is after exposure experiment
 plot(APEX_data$Date.Time,APEX_data$pH_T1) # tail end is after exposure experiment
-plot(APEX_data$Date.Time,APEX_data$pH_T2) # start and tail end is after exposure experiment
+plot(APEX_data$Date.Time,APEX_data$pH_T2) # start and tail end show before and after exposure experiment
 plot(APEX_data$Date.Time,APEX_data$pH_T3) # tail end is after exposure experiment
 plot(APEX_data$Date.Time,APEX_data$TMP_T0)
 plot(APEX_data$Date.Time,APEX_data$TMP_T1)
@@ -84,8 +84,8 @@ APEX_data <- APEX_data[-(4442:4538),] # deleted last rows post-treatment
 plot(APEX_data$Date.Time,APEX_data$pH_T0) # tail end pH increase is ommited
 
 APEX_data$datehour <- cut(as.POSIXct(APEX_data$Date.Time),
-                              format="%d-%m-%Y %H:%M:%S", breaks="hour") # create new column for datehour to aggregate data
-head(APEX_data) # check this new column
+                          format="%d-%m-%Y %H:%M:%S", breaks="hour") # create new column for datehour to aggregate data
+head(APEX_data) # check this new column - all 10 minute increment data is called for the hour as "datehour"
 
 date <- format(as.POSIXct(APEX_data$Date.Time) ,format = "%Y-%m-%d %H") # call year month and date
 days <- as.Date(date) - as.Date(date[1]) # subtract from start to get number of days
@@ -121,40 +121,12 @@ APEX.pH.Exp2 <- hourly.pH %>%
   filter(days >= 24 & days <= 30) # pH APEX Exp2
 
 # Plot daily averages of pH data for the complete experiment (continuous APEX data)
-All.pH <- ggplot(hourly.pH, aes(x=hour, y=mean, group=Treatment)) + #set up plot information
-  geom_errorbar(aes(ymin=hourly.pH$mean-hourly.pH$se, ymax=hourly.pH$mean+hourly.pH$se), colour="black", width=.1, position = position_dodge(width = 0.05)) + #add standard error bars about the mean
-  geom_point(aes(shape=Treatment), size = 2, position = position_dodge(width = 0.05)) + #include points in the shape of the treatments
-  xlab("Days") + #label x axis
-  ylab("pH Total Scale") + # label y axis
-  ylim(7,8.5) + # set y axis scale
-  geom_vline(xintercept = 9.5, linetype="dotted", color = "gray", size=1) + #add vertical line
-  #geom_vline(xintercept = 16928, linetype="dashed", color = "gray", size=1) + #add vertical line
-  geom_vline(xintercept = 23.5, linetype="dotted", color = "gray", size=1) + #add vertical line
-  theme_bw() + #Set the background color
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), #Set the text angle
-        axis.line = element_line(color = 'black'), #Set the axes color
-        panel.border = element_blank(), #Set the border
-        panel.grid.major = element_blank(), #Set the major gridlines
-        panel.grid.minor = element_blank(), #Set the minor gridlines
-        plot.background=element_blank(), #Set the plot background
-        legend.position=c(.4, .25), #set legend location
-        legend.text = element_text(size = 8), #set the legend text size
-        legend.key = element_blank(), #remove the legend background
-        legend.title = element_text(size=8, face="bold")) + #set legend title attributes
-  ggtitle("A) Experimental pH") + #add a main title
-  theme(plot.title = element_text(face = 'bold', 
-                                  size = 12, 
-                                  hjust = 0)) #set title attributes
-  
-All.pH #view plot
-
-
 APEX.pH.Exp1$datehour <- as.POSIXct(APEX.pH.Exp1$datehour, format="%Y-%m-%d %H:%M:%S") #format datehour 
 Exp1.pH.Apex.FIG <- ggplot(APEX.pH.Exp1, aes(x=datehour, y=mean, group=Treatment)) +#Plot average diurnal cycle of temperature data
                     #geom_line() +
                     geom_point(aes(x = datehour, y = mean, group=Treatment), colour="black", cex=1) + #Plot points using time as the x axis, light as the Y axis and black dots
                     geom_errorbar(aes(x=datehour, ymax=mean+se, ymin=mean-se), 
-                    position=position_dodge(0.9), data=APEX.pH.Exp1, col="black", width=0) + #set values for standard error bars and offset on the X axis for clarity
+                                  position=position_dodge(0.9), data=APEX.pH.Exp1, col="black", width=0) + #set values for standard error bars and offset on the X axis for clarity
                     ggtitle("A) Exp1") + #Label the graph with the main title
                     #scale_x_date(date_minor_breaks = "1 day") +
                     #scale_x_date(breaks = APEX.pH.Exp1$datehour[seq(1, length(APEX.pH.Exp1$datehour), by = 24)]) +
@@ -180,30 +152,30 @@ Exp1.pH.Apex.FIG
 
 APEX.pH.commongarden$datehour <- as.POSIXct(APEX.pH.commongarden$datehour, format="%Y-%m-%d %H:%M:%S")#format datehour 
 CommGarden.pH.Apex.FIG <- ggplot(APEX.pH.commongarden, aes(x=datehour, y=mean, group=Treatment)) +#Plot average diurnal cycle of temperature data
-                          #geom_line() +
-                          geom_point(aes(x = datehour, y = mean, group=Treatment), colour="black", cex=1) + #Plot points using time as the x axis, light as the Y axis and black dots
-                          geom_errorbar(aes(x=datehour, ymax=mean+se, ymin=mean-se), 
-                          position=position_dodge(0.9), data=APEX.pH.commongarden, col="black", width=0) + #set values for standard error bars and offset on the X axis for clarity
-                          ggtitle("B) Common garden") + #Label the graph with the main title
-                          #scale_x_date(breaks = APEX.pH.Exp2$hour[seq(1, length(APEX.pH.Exp2$hour), by = 24)]) +
-                          ylim(7,8) + #Set Y axis limits
-                          xlab("Time") + #Label the X Axis
-                          ylab("pH (NBS)") + #Label the Y Axis
-                          #scale_x_date(date_minor_breaks = "1 day") +
-                          theme_bw() + #Set the background color
-                          theme(axis.line = element_line(color = 'black'), #Set the axes color
-                                axis.ticks.length=unit(-0.2, "cm"), #turn ticks inward
-                                axis.text.y = element_text(margin=unit(c(0.5,0.5,0.5,0.5), "cm")), #set margins on labels
-                                axis.text.x = element_text(margin=unit(c(0.5,0.5,0.5,0.5), "cm"), angle = 90, vjust = 0.5, hjust=1), #set margins on labels
-                                panel.grid.major = element_blank(), #Set the major gridlines
-                                panel.grid.minor = element_blank(), #Set the minor gridlines
-                                plot.background=element_blank(), #Set the plot background
-                                panel.border=element_rect(size=1.25, fill = NA), #set outer border
-                                plot.title=element_text(hjust=0),
-                                legend.position="bottom", #set legend location
-                                legend.text = element_text(size = 8), #set the legend text size
-                                legend.key = element_blank(), #remove the legend background
-                                legend.title = element_text(size=8, face="bold")) #Justify the title to the top left
+                            #geom_line() +
+                            geom_point(aes(x = datehour, y = mean, group=Treatment), colour="black", cex=1) + #Plot points using time as the x axis, light as the Y axis and black dots
+                            geom_errorbar(aes(x=datehour, ymax=mean+se, ymin=mean-se), 
+                                          position=position_dodge(0.9), data=APEX.pH.commongarden, col="black", width=0) + #set values for standard error bars and offset on the X axis for clarity
+                            ggtitle("B) Common garden") + #Label the graph with the main title
+                            #scale_x_date(breaks = APEX.pH.Exp2$hour[seq(1, length(APEX.pH.Exp2$hour), by = 24)]) +
+                            ylim(7,8) + #Set Y axis limits
+                            xlab("Time") + #Label the X Axis
+                            ylab("pH (NBS)") + #Label the Y Axis
+                            #scale_x_date(date_minor_breaks = "1 day") +
+                            theme_bw() + #Set the background color
+                            theme(axis.line = element_line(color = 'black'), #Set the axes color
+                                  axis.ticks.length=unit(-0.2, "cm"), #turn ticks inward
+                                  axis.text.y = element_text(margin=unit(c(0.5,0.5,0.5,0.5), "cm")), #set margins on labels
+                                  axis.text.x = element_text(margin=unit(c(0.5,0.5,0.5,0.5), "cm"), angle = 90, vjust = 0.5, hjust=1), #set margins on labels
+                                  panel.grid.major = element_blank(), #Set the major gridlines
+                                  panel.grid.minor = element_blank(), #Set the minor gridlines
+                                  plot.background=element_blank(), #Set the plot background
+                                  panel.border=element_rect(size=1.25, fill = NA), #set outer border
+                                  plot.title=element_text(hjust=0),
+                                  legend.position="bottom", #set legend location
+                                  legend.text = element_text(size = 8), #set the legend text size
+                                  legend.key = element_blank(), #remove the legend background
+                                  legend.title = element_text(size=8, face="bold")) #Justify the title to the top left
 CommGarden.pH.Apex.FIG 
 
 APEX.pH.Exp2$datehour <- as.POSIXct(APEX.pH.Exp2$datehour, format="%Y-%m-%d %H:%M:%S")#format datehour 
@@ -211,7 +183,7 @@ Exp2.pH.Apex.FIG <- ggplot(APEX.pH.Exp2, aes(x=datehour, y=mean, group=Treatment
                     #geom_line() +
                     geom_point(aes(x = datehour, y = mean, group=Treatment), colour="black", cex=1) + #Plot points using time as the x axis, light as the Y axis and black dots
                     geom_errorbar(aes(x=datehour, ymax=mean+se, ymin=mean-se), 
-                    position=position_dodge(0.9), data=APEX.pH.Exp2, col="black", width=0) + #set values for standard error bars and offset on the X axis for clarity
+                                  position=position_dodge(0.9), data=APEX.pH.Exp2, col="black", width=0) + #set values for standard error bars and offset on the X axis for clarity
                     ggtitle("C) Exp2") + #Label the graph with the main title
                     #scale_x_date(breaks = APEX.pH.Exp2$hour[seq(1, length(APEX.pH.Exp2$hour), by = 24)]) +
                     ylim(7,8) + #Set Y axis limits
@@ -300,7 +272,7 @@ CommGarden.Temp.Apex.FIG <- ggplot(APEX.Temp.commongarden, aes(x=datehour, y=mea
                             #geom_line() +
                             geom_point(aes(x = datehour, y = mean, group=Treatment), colour="black", cex=1) + #Plot points using time as the x axis, light as the Y axis and black dots
                             geom_errorbar(aes(x=datehour, ymax=mean+se, ymin=mean-se), 
-                            position=position_dodge(0.9), data=APEX.Temp.commongarden, col="black", width=0) + #set values for standard error bars and offset on the X axis for clarity
+                                          position=position_dodge(0.9), data=APEX.Temp.commongarden, col="black", width=0) + #set values for standard error bars and offset on the X axis for clarity
                             ggtitle("E) Common garden") + #Label the graTemp with the main title
                             #scale_x_date(breaks = APEX.Temp.Exp2$hour[seq(1, length(APEX.Temp.Exp2$hour), by = 24)]) +
                             ylim(14,21) + #Set Y axis limits
@@ -328,7 +300,7 @@ Exp2.Temp.Apex.FIG <- ggplot(APEX.Temp.Exp2, aes(x=datehour, y=mean, group=Treat
                       #geom_line() +
                       geom_point(aes(x = datehour, y = mean, group=Treatment), colour="black", cex=1) + #Plot points using time as the x axis, light as the Y axis and black dots
                       geom_errorbar(aes(x=datehour, ymax=mean+se, ymin=mean-se), 
-                      position=position_dodge(0.9), data=APEX.Temp.Exp2, col="black", width=0) + #set values for standard error bars and offset on the X axis for clarity
+                                    position=position_dodge(0.9), data=APEX.Temp.Exp2, col="black", width=0) + #set values for standard error bars and offset on the X axis for clarity
                       ggtitle("F) Exp2") + #Label the graTemp with the main title
                       #scale_x_date(breaks = APEX.Temp.Exp2$hour[seq(1, length(APEX.Temp.Exp2$hour), by = 24)]) +
                       ylim(14,21) + #Set Y axis limits
@@ -341,7 +313,7 @@ Exp2.Temp.Apex.FIG <- ggplot(APEX.Temp.Exp2, aes(x=datehour, y=mean, group=Treat
                             axis.text.y = element_text(margin=unit(c(0.5,0.5,0.5,0.5), "cm")), #set margins on labels
                             axis.text.x = element_text(margin=unit(c(0.5,0.5,0.5,0.5), "cm"), angle = 90, vjust = 0.5, hjust=1), #set margins on labels
                             panel.grid.major = element_blank(), #Set the major gridlines
-                            panel.grid.minor = element_blank(), #Set the minor gridlines
+                              panel.grid.minor = element_blank(), #Set the minor gridlines
                             plot.background=element_blank(), #Set the plot background
                             panel.border=element_rect(size=1.25, fill = NA), #set outer border
                             plot.title=element_text(hjust=0),
@@ -351,13 +323,9 @@ Exp2.Temp.Apex.FIG <- ggplot(APEX.Temp.Exp2, aes(x=datehour, y=mean, group=Treat
                             legend.title = element_text(size=8, face="bold")) #Justify the title to the top left
 Exp2.Temp.Apex.FIG 
 
-
-
-
-grid.arrange(arrangeGrob(Exp1.pH.Apex.FIG, CommGarden.pH.Apex.FIG, Exp2.pH.Apex.FIG, left="Conical pH", ncol=3), 
-             arrangeGrob(Exp1.Temp.Apex.FIG, CommGarden.Temp.Apex.FIG, Exp2.Temp.Apex.FIG, 
-                         left="Conical Temperature", ncol=3), ncol=1)
-
+Supplem.Fig.conical.pH.temp <- grid.arrange(arrangeGrob(Exp1.pH.Apex.FIG, CommGarden.pH.Apex.FIG, Exp2.pH.Apex.FIG, left="Conical pH", ncol=3), 
+                                            arrangeGrob(Exp1.Temp.Apex.FIG, CommGarden.Temp.Apex.FIG, Exp2.Temp.Apex.FIG, 
+                                                        left="Conical Temperature", ncol=3), ncol=1)
 
 ###  HEATH TRAY Flow rate data ##################################################################
 # NOTE: heath tray pairs were gravity-fed SW from conical overflow (1 conical to every heath tray pair)
@@ -393,7 +361,7 @@ flow_EXP_1_2.treat # view summary table
 
 #pH Tris Calibration Curves
 #Data to calculate conversion equations from mV to total scale using tris standard for pH probe
-path.tris <-("C:/Users/samjg/Documents/Notebook/data/Geoduck_Conditioning/RAnalysis/Data/pH_Calibration_Files") #set path to calibration file folder
+path.tris <-("Data/pH_Calibration_Files") #set path to calibration file folder
 file.names.tris<-list.files(path = path.tris, pattern = "csv$") #list all the file names with csv 
 pH.cals <- data.frame(matrix(NA, nrow=length(file.names.tris), ncol=4, dimnames=list(file.names.tris,c("Date", "Intercept", "Slope","R2")))) #generate an empty 3 column dataframe with specific column names
 
@@ -412,7 +380,7 @@ pH.cals #view data
 
 
 #call cumulative spreadsheet of discrete seawater chemistry
-chem<-read.csv("Output/Seawater_chemistry_table_Output_All.csv", header=T, sep=",", na.string="NA", as.is=T) 
+chem<-read.csv("Data/Seawater_chemistry_table_Output_All.csv", header=T, sep=",", na.string="NA", as.is=T) 
 chem # view the file
 chem.exp <-subset(chem, Treatment!="na") #remove na - na often set as the treatment for samples of the sump
 
@@ -521,9 +489,9 @@ SWC.Treatments <- ddply(chem.long, c("Exposure", "Treatment", "variable"), summa
 
 #Calculate descriptive stats by Treatment and exposure 
 SWC.Treatments.all <- ddply(chem.long, c("Treatment", "variable"), summarise,
-                        N = length(na.omit(value)), #count the sample size removing NA
-                        mean = mean(value), #calculate average 
-                        sem = sd(value)/sqrt(N)) #calcualte the standard error of the mean
+                            N = length(na.omit(value)), #count the sample size removing NA
+                            mean = mean(value), #calculate average 
+                            sem = sd(value)/sqrt(N)) #calcualte the standard error of the mean
 
 #Calculate descriptive stats by Treatment and exposure for common garden period
 SWC.common.garden <- ddply(garden.chem.long, c("Exposure", "Treatment", "variable"), summarise,
@@ -542,11 +510,10 @@ ALL.Exposure.long <- reshape(SWC.Treatments.all, idvar="Treatment", direction="w
 CommGard.chem <- reshape(SWC.common.garden, idvar="Treatment", direction="wide", timevar = "variable", drop = c("Exposure", "N"))
 
 # write out tables
-write.table (Exposure1.long, file="C:/Users/samjg/Documents/Notebook/data/Geoduck_Conditioning/RAnalysis/Output/Seawater_chemistry_table_Output_exposure1.csv", sep=",", row.names = FALSE) #save data to output file
-write.table (Exposure2.long, file="C:/Users/samjg/Documents/Notebook/data/Geoduck_Conditioning/RAnalysis/Output/Seawater_chemistry_table_Output_exposure2.csv", sep=",", row.names = FALSE) #save data to output file
-write.table (ALL.Exposure.long, file="C:/Users/samjg/Documents/Notebook/data/Geoduck_Conditioning/RAnalysis/Output/Seawater_chemistry_table_Output_exposure_1_2.csv", sep=",", row.names = FALSE) #save data to output file
-write.table (CommGard.chem, file="C:/Users/samjg/Documents/Notebook/data/Geoduck_Conditioning/RAnalysis/Output/Seawater_chemistry_table_common_garden.csv", sep=",", row.names = FALSE) #save data to output file
-
+write.table (Exposure1.long, file="C:/Users/samjg/Documents/My_Projects/Juvenile_geoduck_OA_2018/RAnalysis/Output/Seawater_chemistry_table_Output_exposure1.csv", sep=",", row.names = FALSE) #save data to output file
+write.table (Exposure2.long, file="C:/Users/samjg/Documents/My_Projects/Juvenile_geoduck_OA_2018/RAnalysis/Output/Seawater_chemistry_table_Output_exposure2.csv", sep=",", row.names = FALSE) #save data to output file
+write.table (ALL.Exposure.long, file="C:/Users/samjg/Documents/My_Projects/Juvenile_geoduck_OA_2018/RAnalysis/Output/Seawater_chemistry_table_Output_exposure_1_2.csv", sep=",", row.names = FALSE) #save data to output file
+write.table (CommGard.chem, file="C:/Users/samjg/Documents/My_Projects/Juvenile_geoduck_OA_2018/RAnalysis/Output/Seawater_chemistry_table_common_garden.csv", sep=",", row.names = FALSE) #save data to output file
 
 ### Respiration Data - Analysis, Graphs, Models  (summarized analysis from Stats_resp_analysis.R)#############
 
@@ -555,6 +522,7 @@ respPreExposure<-read.csv("Data/PreExposure_resp_calc_and_standardized.csv", hea
 names(respPreExposure) # view the names of the data
 
 # plot the PreExposure respiration rate 
+par(mfrow=c(1,1)) #reset plot output
 resp_PreExposure_plot <- ggplot(respPreExposure, aes(x = factor(respPreExposure$Date), y = respPreExposure$LpcResp_alpha0.4_all)) +
   geom_boxplot(alpha = 0.1) +
   geom_point(size = 2, shape = 21) +
@@ -562,8 +530,8 @@ resp_PreExposure_plot <- ggplot(respPreExposure, aes(x = factor(respPreExposure$
         panel.grid.minor.x = element_blank(),
         panel.grid.major.x = element_blank(),
         legend.position = "none")
-print(resp_PreExposure_plot + labs(y="Standard metabolic rate µg O2 L-1 h-1 indiv-1", 
-                            x = "Date") + 
+print(resp_PreExposure_plot + labs(y="Respiration rate rate µg O2 L-1 h-1 indiv-1", 
+                                   x = "Date") + 
         ggtitle("Juvenile geoduck respirometry \ PreExposure"))
 
 #Load Respiraiton Data for exposure 1 and 2
@@ -615,17 +583,6 @@ ggplot(resp_EXP1, aes(x = resp_EXP1[,1], y = resp_EXP1$FINALresp)) +
   geom_smooth(method = 'loess') +
   geom_text(aes(label = resp_EXP1$ID), position = position_nudge(y = -0.01)) # ggplot with loess CI
 
-# TABLES
-# Now that we have Finalresp, overall mean SD SMR in EXP1
-Exp1.table <- do.call(data.frame,aggregate(FINALresp ~ Day*Init.treat, data = resp_EXP1, function(x) c(mean = mean(x), se = std.error(x)))) #mean and st. error table
-#...other tables to view the data
-exp1_resp_all <- do.call(data.frame,aggregate(FINALresp ~ Treat1_Treat2*Date, data = resp_EXP1, function(x) c(mean = mean(x), sd = sd(x)))) # mean SD table by date EXP1
-exp1_resp_summary_all <- summarySE(exp1_resp_all, measurevar="FINALresp.mean", groupvars=c("Treat1_Treat2")) # SMR by treatment EXP1
-exp1_resp_overall <- summarySE(exp1_resp_all, measurevar="FINALresp.mean") # overall SMR EXP1
-resp_EXP2.0.T<- merge(resp_EXP1, resp_EXP2, by=c("tank")) # merge combined treatments from EXP2
-exp1_resp_4.T <- do.call(data.frame,aggregate(FINALresp ~ Treat1_Treat2.y*Date.x, data = resp_EXP2.0.T, function(x) c(mean = mean(x), sd = sd(x)))) # mean SD table by date EXP1 and 4 treatments in EXP2
-exp1_resp_summary.T <- summarySE(exp1_resp_4.T, measurevar="FINALresp.mean", groupvars=c(" Treat1_Treat2.y")) # SMR by four treatments EXP1xEXP2
-
 # PLOTS
 #treatments and time (with PreExposure added)
 colnames(respPreExposure)[1] <- "FINALresp" # rename the calc resp values in PreExposure table to match the resp_EXP1
@@ -635,32 +592,43 @@ resp_EXP1_condensed <- resp_EXP1[,c(11,12,13,14,15,17,21)] # call the columns in
 resp_EXP1_ALL <- rbind(resp_EXP1_condensed, respPreExposure) # merge the two tables for the graph
 
 #plot by exp 1 by treatment
-Exp1.Fig.resp <- ggplot(resp_EXP1_ALL, aes(x = factor(resp_EXP1_ALL$Day), 
-                                            y = resp_EXP1_ALL$FINALresp, 
-                                                            fill = resp_EXP1_ALL$Init.treat)) +
-                  geom_boxplot(alpha = 0.1, width=0.8) +
-                  geom_point(pch = 19, position = position_jitterdodge(0.08), size=1) +
-                  scale_color_grey() + scale_fill_grey() + theme_classic() + ylim(0, 0.6) +
-                  stat_summary(fun.y=mean, geom = "errorbar", aes(ymax = ..y.., ymin = ..y..),
-                               width = 0.8, size=0.6, linetype = "dashed", position = position_jitterdodge(0.001)) +
-                  theme(legend.position = c(0.9,0.9),
-                        text=element_text(family="Times New Roman", size=12)) +
-                  geom_vline(xintercept=c(1.5), linetype="dotted", size=1) +
-                  scale_x_discrete(labels = c("0",2,5,8,10))    +
-                  labs(y=expression("Respiration rate"~(~µg~O[2]*hr^{-1}*indiv^{-1})), x=expression("Time"~(days)))  
-Exp1.Fig.resp_FINAL <- Exp1.Fig.resp + scale_fill_manual(values=c("white", "grey3"), labels=c("Ambient","Elevated"))
+Exp1.Fig.resp.A <- ggplot(resp_EXP1_ALL, aes(x = factor(resp_EXP1_ALL$Day), 
+                                             y = resp_EXP1_ALL$FINALresp, 
+                                             fill = resp_EXP1_ALL$Init.treat)) +
+                    scale_fill_manual(values=c("white","gray1"), 
+                                      labels=c("Ambient","Elevated")) +
+                    geom_boxplot(alpha = 0.5, # color hue
+                                 width=0.6, # boxplot width
+                                 outlier.size=0,
+                                 position = position_dodge(preserve = "single")) +
+                    geom_point(pch = 19, position = position_jitterdodge(0.01), size=1) +
+                    theme_classic() +
+                    stat_summary(fun.y=mean, geom = "errorbar", aes(ymax = ..y.., ymin = ..y..),
+                                 width = 0.6, size=0.4, linetype = "dashed", position = position_dodge(preserve = "single")) +
+                    theme(legend.position = c(0.55,0.9),legend.direction="horizontal", legend.title=element_blank(), 
+                          axis.line = element_line(color = 'black'), #Set the axes color
+                          axis.ticks.length=unit(0.2, "cm")) + #turn ticks inward
+                    geom_vline(xintercept=c(1.5), linetype="dotted", size=1) +
+                    scale_x_discrete(labels = c("0",2,5,8,10))    +
+                    labs(y=expression("Respiration rate"~(~µg~O[2]*hr^{-1}*mm^{-1})), x=expression("Days"),fill= "")  
+Exp1.Fig.resp.B <- Exp1.Fig.resp.A + theme(axis.text.x = element_text(angle = 0, hjust = 0.5, size=13,color="black"),
+                                           axis.text.y = element_text(angle = 0, hjust = 0.5, size=13,color="black"),
+                                           axis.line = element_line(color = 'black'),
+                                           axis.title.x = element_text(size = 14),
+                                           axis.title.y = element_text(size = 14))
+Exp1.Fig.resp_FINAL <-  Exp1.Fig.resp.B + scale_y_continuous(limits = c(0, 0.65), expand = c(0, 0))
 Exp1.Fig.resp_FINAL
 
 # plot just treatment (without prePreExposure)
 Exp1.Fig.resp_total <- ggplot(resp_EXP1, aes(x = factor(resp_EXP1$Init.treat), y = resp_EXP1$FINALresp, fill = resp_EXP1$Init.treat)) +
-                        geom_boxplot(alpha = 0.1, outlier.shape = 19,
-                                     outlier.fill = "black", outlier.size = 1, lwd=0.2) + 
-                        geom_point(pch = 19, position = position_jitterdodge(0.05), size=1) +
-                        scale_color_grey() + scale_fill_grey() + theme_classic() +
-                        #geom_point(aes(fill = resp_EXP1$Treat1_Treat2), size = 2, shape = 21, position = position_jitterdodge(0.15)) +
-                        theme(legend.position = c(.9, .9), legend.text=element_text(size=8)) +
-                        stat_summary(fun.y=mean, geom="point", pch="+", size=3, position = position_jitterdodge(0.01)) +
-                        labs(y="Standard metabolic rate µg O2 L-1 h-1 indiv-1",  x = "Treatment", fill= "") 
+  geom_boxplot(alpha = 0.1, outlier.shape = 19,
+               outlier.fill = "black", outlier.size = 1, lwd=0.2) + 
+  geom_point(pch = 19, position = position_jitterdodge(0.05), size=1) +
+  scale_color_grey() + scale_fill_grey() + theme_classic() +
+  #geom_point(aes(fill = resp_EXP1$Treat1_Treat2), size = 2, shape = 21, position = position_jitterdodge(0.15)) +
+  theme(legend.position = c(.9, .9), legend.text=element_text(size=8)) +
+  stat_summary(fun.y=mean, geom="point", pch="+", size=3, position = position_jitterdodge(0.01)) +
+  labs(y="Standard metabolic rate µg O2 L-1 h-1 indiv-1",  x = "Treatment", fill= "") 
 Exp1.Fig.resp_total
 
 # ANALYSIS
@@ -704,9 +672,9 @@ summary(lm(resp_EXP2[,1]~resp_EXP2[,5])) #Adjusted R-squared:  0.8002
 
 # label with row numbers  - shows values outside of CI interval in loess curve
 ggplot(resp_EXP2, aes(x = resp_EXP2[,1], y = resp_EXP2[,5])) +
-          geom_point() +
-          geom_smooth(method = 'loess') +
-          geom_text(aes(label = resp_EXP2$ID), position = position_nudge(y = .01)) 
+  geom_point() +
+  geom_smooth(method = 'loess') +
+  geom_text(aes(label = resp_EXP2$ID), position = position_nudge(y = .01)) 
 # outside of loess curve = 114, 153,155,156,150,141,105,130,152,98,188
 tail(resp_EXP1) # end of exposure 1 is row #96
 numberID <- (c(114,153,155,156,150,141,105,130,152,98,188)) - 96 #subtract by 96 to get the actual row number in resp_exp2
@@ -726,56 +694,66 @@ resp_EXP2$FINALresp[c(18, 57, 59, 60 ,54 ,45 , 9 ,34 ,56,  2, 92)] <- resp_EXP2$
 
 # test relationship between Finalresp and the Ref
 plot(resp_EXP2$FINALresp,resp_EXP2$Resp_individually_all.csv, main= "Ref vs. FINALresp")
-summary(lm(resp_EXP2$Resp_individually_all.csv~resp_EXP2$FINALresp)) # summarize linear model - Multiple R-squared:  0.9304,	Adjusted R-squared:  0.9297 
+summary(lm(resp_EXP2$Resp_individually_all.csv~resp_EXP2$FINALresp)) # summarize linear model - Multiple R-squared:  0.9261,	Adjusted R-squared:  0.9253 
 ggplot(resp_EXP2, aes(x = resp_EXP2$Resp_individually_all.csv, y = resp_EXP2$FINALresp)) +
   geom_point() +
   geom_smooth(method = 'loess') +
   geom_text(aes(label = resp_EXP2$ID), position = position_nudge(y = -0.01)) # ggplot with loess CI
 
-# overall Resp in EXP2
+# subset dataset for Day 0 and days 2 4 and 6
 resp_EXP2_2.4.6. <- subset(resp_EXP2, Day!=0) # subset out pre-exposure measurements on day 0 (day 24 of experiment)
 resp_EXP2_d0 <- subset(resp_EXP2, Day==0) # subset of just day 0 data (for the plot)
-exp2_resp_all <- do.call(data.frame,aggregate(FINALresp ~ Treat1_Treat2*Date, data = resp_EXP2_2.4.6., function(x) c(mean = mean(x), sd = sd(x)))) # mean SD table by init*sec treatments date EXP2
-exp2_resp_summary_all <- summarySE(exp2_resp_all, measurevar="FINALresp.mean", groupvars=c("Treat1_Treat2")) # SMR by init*sec  treatments EXP2
-exp2_resp_all.2 <- do.call(data.frame,aggregate(FINALresp ~ Sec.treat*Date, data = resp_EXP2_2.4.6., function(x) c(mean = mean(x), sd = sd(x)))) # mean SD table by sec treatments date EXP2
-exp2_resp_summary_all.2 <- summarySE(exp2_resp_all.2, measurevar="FINALresp.mean", groupvars=c("Sec.treat")) # resp rate by sec  treatments EXP2
-exp2_resp_overall <- summarySE(exp2_resp_all, measurevar="FINALresp.mean") # overall resp rate EXP2
 
 # PLOTTING
 resp_EXP2_d0$Treat1_Treat2 <- resp_EXP2_d0$Init.treat # Day 0 in Exp2 still has potential carry over from 2 treatments in intial exp, not 4 treatments in Exp2
 resp_EXP2_merge <- rbind(resp_EXP2_d0, resp_EXP2_2.4.6.) # merge the two tables for the graph
 #plot treatments and time (PreExposure added as day 0 data)
-Exp2.Fig.resp <- ggplot(resp_EXP2_merge, aes(x = factor(resp_EXP2_merge$Day), y = resp_EXP2_merge$FINALresp, fill = resp_EXP2_merge$Treat1_Treat2)) +
-                  geom_boxplot(alpha = 0.1, width=0.8) + 
-                  geom_point(pch = 19, position = position_jitterdodge(0.1), size=1) +
-                  scale_color_grey() + scale_fill_grey() + theme_classic() + ylim(0, 0.6) +
-                  #geom_point(aes(fill = resp_EXP2$Treat1_Treat2), size = 1.5, shape = 21, position = position_jitterdodge(0.05)) +
-                  stat_summary(fun.y=mean, geom = "errorbar", aes(ymax = ..y.., ymin = ..y..), 
-                               width = 0.8, size=0.6, linetype = "dashed", position = position_jitterdodge(0.01)) +
-                  theme(legend.position = c(0.9,0.9)) +
-                  geom_vline(xintercept=c(1.5), linetype="dotted", size=1) +
-                  scale_x_discrete(labels = c("0",2,4,6)) +
-                  geom_vline(xintercept=c(1.5), linetype="dotted", size=1) +
-                  labs(y=expression("Respiration rate"~(~µg~O[2]*hr^{-1}*indiv^{-1})), x=expression("Time"~(days))) 
-Exp2.Fig.resp_FINAL <- Exp2.Fig.resp + scale_fill_manual(values=c("white", "white", "grey80", "grey3", "gray50", "grey3"), 
-                                labels=c("Ambient","Ambient × Ambient","Ambient × Elevated","Elevated","Elevated × Ambient","Elevated × Elevated"))
-Exp2.Fig.resp_FINAL
+Exp2.Fig.resp.A <- ggplot(resp_EXP2_merge, aes(x = factor(resp_EXP2_merge$Day), y = resp_EXP2_merge$FINALresp, fill = resp_EXP2_merge$Treat1_Treat2)) +
+                    scale_fill_manual(values=c("white", "white", "grey80", "gray1", "gray50", "gray1"), 
+                                      labels=c("Ambient","Ambient × Ambient","Ambient × Elevated","Elevated","Elevated × Ambient","Elevated × Elevated")) +
+                    geom_boxplot(alpha = 0.5, # color hue
+                                 width=0.6, # boxplot width
+                                 outlier.size=0, # make outliers small
+                                 position = position_dodge(preserve = "single")) + 
+                    geom_point(pch = 19, position = position_jitterdodge(0.01), size=1) +
+                    theme_classic() + ylim(0, 0.6) +
+                    #geom_point(aes(fill = resp_EXP2$Treat1_Treat2), size = 1.5, shape = 21, position = position_jitterdodge(0.05)) +
+                    stat_summary(fun.y=mean, geom = "errorbar", aes(ymax = ..y.., ymin = ..y..), 
+                                 width = 0.6, size=0.4, linetype = "dashed", position = position_dodge(preserve = "single")) +
+                    theme(legend.position = c(0.55,0.96), legend.direction="horizontal", legend.title=element_blank()) +
+                    geom_vline(xintercept=c(1.5), linetype="dotted", size=1) +
+                    scale_x_discrete(labels = c("0",2,4,6)) +
+                    geom_vline(xintercept=c(1.5), linetype="dotted", size=1) +
+                    labs(y=expression("Respiration rate"~(~µg~O[2]*hr^{-1}*indiv^{-1})), x=expression("Days"), fill="") 
+Exp2.Fig.resp.A # view the plot
+Exp2.Fig.resp.B <- 
+                    Exp2.Fig.resp.A + 
+                    theme(axis.text.x = element_text(angle = 0, hjust = 0.5, size=13,color="black"),
+                          axis.text.y = element_text(angle = 0, hjust = 0.5, size=13,color="black"),
+                          axis.line = element_line(color = 'black'),
+                          axis.ticks.length=unit(0.2, "cm"),
+                          axis.title.x = element_text(size = 14),
+                          axis.title.y = element_text(size = 14)) +
+                    scale_y_continuous(limits = c(0, 0.65), expand = c(0, 0))
+Exp2.Fig.resp.B # view the plot
 
 # ANALYSIS
 # Three-Way anova for respiration rate under Secondary OA Exposure
 resp_EXP2_2.4.6.$Day <- as.character(resp_EXP2_2.4.6.$Day) # covert day to character 
 EXP2.resp.aov.mod <- aov(FINALresp ~ Init.treat*Sec.treat*Day, data = resp_EXP2_2.4.6.) # run anova on treatment and time
-anova(EXP2.resp.aov.mod) # significant effect from day and marginal effect from secondary treatment
+anova(EXP2.resp.aov.mod) # significant effect of time and marginal effect from secondary treatment
 # Levene's test for homogeneity 
 leveneTest(EXP2.resp.aov.mod) # p 0.4541
 # Shapiro test
 EXP2.resp.mod.residuals <- residuals(object = EXP2.resp.aov.mod) # call residuals from the model
 shapiro.test(x = EXP2.resp.mod.residuals) # 0.005096
-#post-hoc
-exp2.resp.ph <- lsmeans(EXP2.resp.aov.mod, pairwise ~ Init.treat*Sec.treat*Day)# pariwise Tukey Post-hoc test between repeated treatments
-exp2.resp.ph # view post hoc summary
-E2.pairs.RESP.05 <- cld(exp2.resp.ph, alpha=.05, Letters=letters) #list pairwise tests and letter display p < 0.05
+#post-hoc for sig affect of time
+exp2.resp.day <- lsmeans(EXP2.resp.aov.mod, pairwise ~ Day)# pariwise Tukey Post-hoc test between repeated treatments
+exp2.resp.day # view post hoc summary
+E2.pairs.RESP.05 <- cld(exp2.resp.day, alpha=.05, Letters=letters) #list pairwise tests and letter display p < 0.05
 E2.pairs.RESP.05 #view results
+E2.pairs.RESP.1 <- cld(exp2.resp.day, alpha=.1, Letters=letters) #list pairwise tests and letter display p < 0.05
+E2.pairs.RESP.1 #view results
 # plot the residuals
 par(mfrow=c(1,3)) #set plotting configuration
 par(mar=c(1,1,1,1)) #set margins for plots
@@ -784,14 +762,25 @@ shapiro.test(residuals(EXP2.resp.aov.mod)) # residuals are normal
 boxplot(residuals(EXP2.resp.aov.mod)) #plot boxplot of residuals
 plot(fitted(EXP2.resp.aov.mod),residuals(EXP2.resp.aov.mod)) 
 
-
 # t-test for differences at the end of exp1 (day 10) and start of exp 2 (day 0) by treatment
-exp1_d10.resp  <- subset(resp_EXP1, Date=="20180724") # starting resp  on Day 10 in Exp 1
-t.test(exp1_d10.resp$FINALresp~exp1_d10.resp$Init.treat) # p-value = 0.08471; t-test shows no difference between treatment at the start of Exp2
+exp1_d10.resp  <- subset(resp_EXP1, Date=="20180724") #  resp  on Day 10 in Exp 1
+t.test(exp1_d10.resp$FINALresp~exp1_d10.resp$Init.treat) # p-value = 0.08471; t-test shows no difference between treatment at end of exp 1
 
 exp2_d0.resp <- subset(resp_EXP2, Date=="20180807") # starting resp  on Day 0 in Exp 2
 t.test(exp2_d0.resp$FINALresp~exp2_d0.resp$Init.treat) # p-value = 0.01469; t-test shows significant difference between treatment at the start of Exp2
 
+#ADD MODEL RESULTS TO THE PLOT
+Exp2.Fig.resp_FINAL <- 
+                    Exp2.Fig.resp.B + 
+                    geom_segment(aes(x = 1.6, y = 0.55, xend = 2.4, yend = 0.55)) +
+                    geom_segment(aes(x = 2.6, y = 0.55, xend = 3.4, yend = 0.55)) + 
+                    geom_segment(aes(x = 3.6, y = 0.55, xend = 4.4, yend = 0.55)) +
+                    geom_segment(aes(x = .6, y = 0.55, xend = 1.4, yend = 0.55)) +
+                    annotate("text", x="0", y=0.54, label = "**", size = 4) + # t-test with p < 0.05 between treatments at day 0
+                    annotate("text", x="2", y=0.54, label = "*a", size = 4) + # add text to the graphic for posthoc letters - effect of time
+                    annotate("text", x="4", y=0.54, label = "*ab", size = 4) + # add text to the graphic for posthoc letters - effect of time
+                    annotate("text", x="6", y=0.54, label = "*b", size = 4) # add text to the graphic for posthoc letters - effect of time
+Exp2.Fig.resp_FINAL
 
 # TEST FOR EFFECTS OF THE FOUR TREATMENT GROUPS  FOR ALL DAYS
 # anovas for signifcant between treatments for all days in EXP2 
@@ -800,287 +789,16 @@ Resp_d2_EXP2 <- aov(FINALresp~Treat1_Treat2, data=Resp_EXP2_d2)
 summary(Resp_d2_EXP2) # day 2 no difference between treatments
 
 Resp_EXP2_d4 <- subset(resp_EXP2, Day==4)
-Resp_d4_EXP2 <- aov(FINALresp~Treat1_Treat2, data=size_EXP2_d4)
+Resp_d4_EXP2 <- aov(FINALresp~Treat1_Treat2, data=Resp_EXP2_d4)
 summary(Resp_d4_EXP2) # day4 no difference between treatments
 
 Resp_EXP2_d6 <- subset(resp_EXP2, Day==6)
-Resp_d6_EXP2 <- aov(FINALresp~Treat1_Treat2, data=size_EXP2_d6)
+Resp_d6_EXP2 <- aov(FINALresp~Treat1_Treat2, data=Resp_EXP2_d6)
 summary(Resp_d6_EXP2) # day 6 no difference between treatments
 
 Resp_EXP2_ALL <- subset(resp_EXP2, Day!=0)
-Resp_alldays_EXP2 <- aov(FINALresp~Treat1_Treat2, data=size_EXP2_ALL)
-summary(Resp_alldays_EXP2) # ALL days (aside from PreExposure rates on day 0) no difference between treatments
-
-# NO SIG DIFF (P < 0.05) FOR EXP2 
-##### PLOTTING
-#barplots for mean SD exp1 - exp2
-exp1_resp_summary.T # exp 1 table grouped by intit*sec treatments
-exp1_resp_summary.T$trial <- "initial" # add column for trial to merge
-colnames(exp1_resp_summary.T)[1] <- "Treat1_Treat2" # to match and merge with eXP2
-exp2_resp_summary_all # exp 2 table grouped by initiat*sec treatments
-exp2_resp_summary_all$trial <- "secondary" # add column for trial to merge
-Table_EXP_1_2 <- rbind(exp1_resp_summary.T, exp2_resp_summary_all) # bind rows by treatment column
-Table_EXP_1_2 # view table
-
-#  mean percent difference between exposure periods
-percent_av_resp_exposures <- Table_EXP_1_2                %>% # view the table
-  select(trial, FINALresp.mean) %>% # select desired data
-  group_by(trial)               %>% # group by exposure period 'trial'
-  dplyr::summarise(mean = mean(FINALresp.mean), # summary table
-                   min = min(FINALresp.mean),
-                   sd = sd(FINALresp.mean),
-                   SEM = (sd/sqrt(n())),
-                   count =n())                   %>%
-  mutate(pct.chg = (100*((mean[2] - (mean[1]))/(mean[1])))) # calculate the percent change 
-percent_av_resp_exposures # view summary table 
-
-#  percent difference between treatment
-percent_av_resp <- Table_EXP_1_2            %>% # view the table
-  group_by(Treat1_Treat2) %>%
-  spread(trial, FINALresp.mean)             %>% # create a horizonatal table for the mean resp in initial (n = 4 per treat) and secondary (n=3 per treat)
-  select(Treat1_Treat2, initial, secondary) %>% # select only the treatments and the mean resp rates
-  mutate(secondary=lag(secondary))          %>% # shift the secondary down to align with
-  na.omit()                                 %>% # omit na 
-  mutate(pct.chg = (100*((secondary - (initial))/(initial)))) # calculate the percent change from (secondary - initial / secondary) *100
-
-percent_av_resp # view the table
-
-# barplot resp rate exp1 and exp 2 (pooled means)
-barplot_resp <- ggplot(Table_EXP_1_2, aes(x=as.factor(Treat1_Treat2), y=FINALresp.mean , fill=trial)) +
-  geom_bar(position=position_dodge(), stat="identity", colour='black') +
-  geom_errorbar(aes(ymin=FINALresp.mean-se, ymax=FINALresp.mean+se), width=.2,position=position_dodge(.9)) +
-  xlab("treatment initial*secondary") +
-  ylab("Respiration rate") +
-  ylim(0,0.4) +
-  theme_bw() + #Set the background color
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), #Set the text angle
-        axis.line = element_line(color = 'black'), #Set the axes color
-        panel.border = element_blank(), #Set the border
-        panel.grid.major = element_blank(), #Set the major gridlines
-        panel.grid.minor = element_blank(), #Set the minor gridlines
-        plot.background=element_blank(), #Set the plot background
-        legend.position='none') + #remove legend background
-  ggtitle("resp rate exp1 and exp 2 mean SE") +
-  theme(plot.title = element_text(face = 'bold', 
-                                  size = 12,
-                                  hjust = 0))
-barplot_resp
-
-# plot percent difference seconadry - initial exposure trial (pooled means)
-barplot_resp_percent <- ggplot(percent_av_resp, aes(x=as.factor(Treat1_Treat2), y=pct.chg)) +
-  geom_bar(position=position_dodge(), stat="identity", colour='black') +
-  xlab("treatment initial*secondary") +
-  ylab("Respiration rate") +
-  ylim(0,60) +
-  theme_bw() + #Set the background color
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), #Set the text angle
-        axis.line = element_line(color = 'black'), #Set the axes color
-        panel.border = element_blank(), #Set the border
-        panel.grid.major = element_blank(), #Set the major gridlines
-        panel.grid.minor = element_blank(), #Set the minor gridlines
-        plot.background=element_blank(), #Set the plot background
-        legend.position='none') + #remove legend background
-  ggtitle("Percent diff in average resp rate exp1 - exp2") +
-  theme(plot.title = element_text(face = 'bold', 
-                                  size = 12, 
-                                  hjust = 0))
-barplot_resp_percent # view the plot
-
-### Interaction Plots ###
-#tables for interaction plots (pooled all days)
-x2.resp_d0 <-do.call(data.frame,aggregate(FINALresp ~ Day*Init.treat*Sec.treat, data = resp_EXP2, function(x) c(mean = mean(x), se = std.error(x))))
-x2.resp_d0 <- subset(x2.resp_d0, Day==0)
-x2.resp <- do.call(data.frame,aggregate(FINALresp ~ Day*Init.treat*Sec.treat, data = resp_EXP2, function(x) c(mean = mean(x), se = std.error(x))))
-x2.resp <- subset(x2.resp, Day=c(2,4,6))
-x2.1.resp <- do.call(data.frame,aggregate(FINALresp ~ Init.treat*Sec.treat, data = resp_EXP2_2.4.6., function(x) c(mean = mean(x), se = std.error(x))))
-x2.resp$treatments <- paste(x2.resp$Init.treat, x2.resp$Sec.treat, sep="_") # combine treatments in a column
-
-#Day 0
-Day0 <- x2.resp_d0
-
-Fig.Exp2.D0.resp <- ggplot(Day0, aes(x=Sec.treat, y=FINALresp.mean , group=Init.treat)) + 
-  geom_errorbar(aes(ymin=Day0$FINALresp.mean -Day0$FINALresp.se, ymax=Day0$FINALresp.mean +Day0$FINALresp.se), colour="black", width=.1, position = position_dodge(width = 0.05)) +
-  geom_line(aes(linetype=Init.treat), size = 0.5, position = position_dodge(width = 0.05)) +   
-  geom_point(aes(shape=Init.treat), size = 3, position = position_dodge(width = 0.05)) +
-  #annotate("text", x=0.85, y=1.3, label = "b", size = 3) + #add text to the graphic for posthoc letters
-  #annotate("text", x=c(0.85,0.85,2.2,2.2,2.25), y=c(0.9,0.95,0.88, 0.92,0.97), label = "ab", size = 3) + #add text to the graphic for posthoc letters
-  xlab("Secondary Treatment") +
-  ylab("Respiration rate") +
-  ylim(0,0.5) +
-  labs(fill="") +
-  theme_bw() + #Set the background color
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), #Set the text angle
-        axis.line = element_line(color = 'black'), #Set the axes color
-        panel.border = element_blank(), #Set the border
-        panel.grid.major = element_blank(), #Set the major gridlines
-        panel.grid.minor = element_blank(), #Set the minor gridlines
-        plot.background=element_blank(), #Set the plot background
-        legend.position = c(.92, .9), legend.text=element_text(size=8)) + #remove legend background
-  ggtitle(" Secondary Exposure Day 0") +
-  theme(plot.title = element_text(face = 'bold', 
-                                  size = 12, 
-                                  hjust = 0))
-
-Fig.Exp2.D0.resp
-
-#Day 2
-Day2 <- subset(x2.resp, Day==2)
-
-Fig.Exp2.D2.resp <- ggplot(Day2, aes(x=Sec.treat, y=FINALresp.mean , group=Init.treat)) + 
-  geom_errorbar(aes(ymin=Day2$FINALresp.mean -Day2$FINALresp.se, ymax=Day2$FINALresp.mean +Day2$FINALresp.se), colour="black", width=.1, position = position_dodge(width = 0.05)) +
-  geom_line(aes(linetype=Init.treat), size = 0.5, position = position_dodge(width = 0.05)) +   
-  geom_point(aes(shape=Init.treat), size = 3, position = position_dodge(width = 0.05)) +
-  #annotate("text", x=0.85, y=1.3, label = "b", size = 3) + #add text to the graphic for posthoc letters
-  #annotate("text", x=c(0.85,0.85,2.2,2.2,2.25), y=c(0.9,0.95,0.88, 0.92,0.97), label = "ab", size = 3) + #add text to the graphic for posthoc letters
-  xlab("Secondary Treatment") +
-  ylab("Respiration rate") +
-  ylim(0,0.5) +
-  labs(fill="") +
-  theme_bw() + #Set the background color
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), #Set the text angle
-        axis.line = element_line(color = 'black'), #Set the axes color
-        panel.border = element_blank(), #Set the border
-        panel.grid.major = element_blank(), #Set the major gridlines
-        panel.grid.minor = element_blank(), #Set the minor gridlines
-        plot.background=element_blank(), #Set the plot background
-        legend.position = c(.92, .9), legend.text=element_text(size=8)) + #remove legend background
-  ggtitle(" Secondary Exposure Day 2") +
-  theme(plot.title = element_text(face = 'bold', 
-                                  size = 12, 
-                                  hjust = 0))
-
-Fig.Exp2.D2.resp
-
-#Day 4
-Day4 <- subset(x2.resp, Day==4)
-
-Fig.Exp2.D4.resp <- ggplot(Day4, aes(x=Sec.treat, y=FINALresp.mean , group=Init.treat)) + 
-  geom_errorbar(aes(ymin=Day4$FINALresp.mean -Day4$FINALresp.se, ymax=Day4$FINALresp.mean +Day4$FINALresp.se), colour="black", width=.1, position = position_dodge(width = 0.05)) +
-  geom_line(aes(linetype=Init.treat), size = 0.5, position = position_dodge(width = 0.05)) +   
-  geom_point(aes(shape=Init.treat), size = 3, position = position_dodge(width = 0.05)) +
-  #annotate("text", x=0.85, y=1.3, label = "b", size = 3) + #add text to the graphic for posthoc letters
-  #annotate("text", x=c(0.85,0.85,2.2,2.2,2.25), y=c(0.9,0.95,0.88, 0.92,0.97), label = "ab", size = 3) + #add text to the graphic for posthoc letters
-  xlab("Secondary Treatment") +
-  ylab("Respiration rate") +
-  ylim(0,0.5) +
-  labs(fill="") +
-  theme_bw() + #Set the background color
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), #Set the text angle
-        axis.line = element_line(color = 'black'), #Set the axes color
-        panel.border = element_blank(), #Set the border
-        panel.grid.major = element_blank(), #Set the major gridlines
-        panel.grid.minor = element_blank(), #Set the minor gridlines
-        plot.background=element_blank(), #Set the plot background
-        legend.position = c(.92, .9), legend.text=element_text(size=8)) + #remove legend background
-  ggtitle(" Secondary Exposure Day 4") +
-  theme(plot.title = element_text(face = 'bold', 
-                                  size = 12, 
-                                  hjust = 0))
-
-Fig.Exp2.D4.resp
-
-#Day 6
-Day6 <- subset(x2.resp, Day==6)
-
-Fig.Exp2.D6.resp <- ggplot(Day6, aes(x=Sec.treat, y=FINALresp.mean , group=Init.treat)) + 
-  geom_errorbar(aes(ymin=Day6$FINALresp.mean -Day6$FINALresp.se, ymax=Day6$FINALresp.mean +Day6$FINALresp.se), colour="black", width=.1, position = position_dodge(width = 0.05)) +
-  geom_line(aes(linetype=Init.treat), size = 0.5, position = position_dodge(width = 0.05)) +   
-  geom_point(aes(shape=Init.treat), size = 3, position = position_dodge(width = 0.05)) +
-  #annotate("text", x=0.85, y=1.3, label = "b", size = 3) + #add text to the graphic for posthoc letters
-  #annotate("text", x=c(0.85,0.85,2.2,2.2,2.25), y=c(0.9,0.95,0.88, 0.92,0.97), label = "ab", size = 3) + #add text to the graphic for posthoc letters
-  xlab("Secondary Treatment") +
-  ylab("Respiration rate") +
-  ylim(0,0.5) +
-  labs(fill="") +
-  theme_bw() + #Set the background color
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), #Set the text angle
-        axis.line = element_line(color = 'black'), #Set the axes color
-        panel.border = element_blank(), #Set the border
-        panel.grid.major = element_blank(), #Set the major gridlines
-        panel.grid.minor = element_blank(), #Set the minor gridlines
-        plot.background=element_blank(), #Set the plot background
-        legend.position = c(.92, .9), legend.text=element_text(size=8)) + #remove legend background
-  ggtitle(" Secondary Exposure Day 6") +
-  theme(plot.title = element_text(face = 'bold', 
-                                  size = 12, 
-                                  hjust = 0))
-
-Fig.Exp2.D6.resp
-
-#Averaged across Days (without day 0 before treatments began)
-
-Fig.Exp2.All.resp <- ggplot(x2.1.resp, aes(x=Sec.treat, y=FINALresp.mean , group=Init.treat)) + 
-  geom_errorbar(aes(ymin=x2.1.resp$FINALresp.mean -x2.1.resp$FINALresp.se, ymax=x2.1.resp$FINALresp.mean +x2.1.resp$FINALresp.se), colour="black", width=.1, position = position_dodge(width = 0.05)) +
-  geom_line(aes(linetype=Init.treat), size = 0.5, position = position_dodge(width = 0.05)) +   
-  geom_point(aes(shape=Init.treat), size = 3, position = position_dodge(width = 0.05)) +
-  #annotate("text", x=0.85, y=1.3, label = "b", size = 3) + #add text to the graphic for posthoc letters
-  #annotate("text", x=c(0.85,0.85,2.2,2.2,2.25), y=c(0.9,0.95,0.88, 0.92,0.97), label = "ab", size = 3) + #add text to the graphic for posthoc letters
-  xlab("Secondary Treatment") +
-  ylab("Respiration rate") +
-  ylim(0,0.5) +
-  labs(fill="") +
-  theme_bw() + #Set the background color
-  theme(axis.text.x = element_text(vjust = 0.5, hjust=1), #Set the text angle
-        axis.line = element_line(color = 'black'), #Set the axes color
-        panel.border = element_blank(), #Set the border
-        panel.grid.major = element_blank(), #Set the major gridlines
-        panel.grid.minor = element_blank(), #Set the minor gridlines
-        plot.background=element_blank(), #Set the plot background
-        legend.position = c(.92, .9), legend.text=element_text(size=8)) + #remove legend background
-  #ggtitle(" Secondary Exposure All Days") +
-  theme(plot.title = element_text(face = 'bold', 
-                                  size = 12, 
-                                  hjust = 0))
-
-Fig.Exp2.All.resp
-
-# plot all data with mean standard error and time
-LINEFig.Exp2.All.resp <- ggplot(x2.resp, aes(x=Day, y=FINALresp.mean , group=treatments)) + 
-  geom_errorbar(aes(ymin=x2.resp$FINALresp.mean -x2.resp$FINALresp.se, ymax=x2.resp$FINALresp.mean +x2.resp$FINALresp.se), colour="black", width=.1, position = position_dodge(width = 0.05)) +
-  geom_line(aes(linetype=treatments), size = 0.5, position = position_dodge(width = 0.05)) +   
-  geom_point(aes(shape=treatments), size = 3, position = position_dodge(width = 0.05)) +
-  #annotate("text", x=0.85, y=1.3, label = "b", size = 3) + #add text to the graphic for posthoc letters
-  #annotate("text", x=c(0.85,0.85,2.2,2.2,2.25), y=c(0.9,0.95,0.88, 0.92,0.97), label = "ab", size = 3) + #add text to the graphic for posthoc letters
-  xlab("Secondary Treatment") +
-  ylab("Respiration rate") +
-  ylim(0,0.5) +
-  labs(fill="") +
-  theme_bw() + #Set the background color
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), #Set the text angle
-        axis.line = element_line(color = 'black'), #Set the axes color
-        panel.border = element_blank(), #Set the border
-        panel.grid.major = element_blank(), #Set the major gridlines
-        panel.grid.minor = element_blank(), #Set the minor gridlines
-        plot.background=element_blank(), #Set the plot background
-        legend.position = c(.92, .9), legend.text=element_text(size=8)) + #remove legend background
-  ggtitle(" Secondary Exposure All Days") +
-  theme(plot.title = element_text(face = 'bold', 
-                                  size = 12, 
-                                  hjust = 0))
-
-LINEFig.Exp2.All.resp
-
-
-# Saving output plots
-
-#Figure1.Exp1.Resp <- arrangeGrob(Exp1.Fig.resp, ncol=1)
-#ggsave(file="Output/Geoduck_Resp_Exp1.pdf", Exp1.Fig.resp, width = 6.5, height = 8, units = c("in"))
-
-
-#Figure1.Exp2.Resp <- arrangeGrob(Exp2.Fig.resp,Fig.Exp2.D0.resp, Fig.Exp2.D2.resp,Fig.Exp2.D4.resp,Fig.Exp2.D6.resp, ncol=1)
-#ggsave(file="Output/Geoduck_Resp_Exp2.byDay.pdf", Figure1.Exp2.Resp, width = 6.5, height = 15, units = c("in"))
-
-#Figure1.Exp2.AllResp <- arrangeGrob(Fig.Exp2.All.resp, ncol=1)
-#ggsave(file="Output/Geoduck_Resp_Exp2.All.pdf", Figure1.Exp2.AllResp, width = 6.5, height = 8, units = c("in"))
-
-# Saving anova tables 
-
-#Table1.Exp1.Resp <- data.frame(EXP1.lme.anovatable)
-#write.csv(file="Output/Geoduck_Resp.table_Exp1.csv", Table1.Exp1.Resp)
-
-#Table12.Exp2.Resp <- data.frame(EXP2.lme.anovatable)
-#write.csv(file="Output/Geoduck_Resp.table_Exp2.csv", Table12.Exp2.Resp)
-
+Resp_alldays_EXP2 <- aov(FINALresp~Treat1_Treat2, data=Resp_EXP2_ALL)
+summary(Resp_alldays_EXP2) # ALL days no difference between treatments
 
 
 ### Growth Data - Analysis, Graphs, Models  (summarized analysis from Stats_growth_analysis.R)#######################################
@@ -1098,64 +816,62 @@ size_EXP1_PreExposure$Day <- "0" # name day as 0 (before it was "prebasal")
 size_EXP1_all <- rbind(size_EXP1_PreExposure, size_EXP1) # merge two datasets for the first size figure Exp 1
 
 size_EXP2 <- subset(size, Exp.Num=="Exp2") # all Exp 2
+size_EXP2.d0 <- subset(size_EXP2, Day==0)
+size_EXP2.d0$Treat1_Treat2 <- size_EXP2.d0$Init.Trt # merge column or initial treat as treat1_treat2 for Exp2 figure
 size_EXP2.0 <-subset(size_EXP2, Day!=0) # Exp 2 without day 0 
+size_EXP2_all <- rbind(size_EXP2.d0, size_EXP2.0) # merge two datasets for the first size figure Exp 2
 size_Exp1.T<- merge(size_EXP1, size_EXP2, by=c("tank"))  #merge to obtained combined treatments from EXP2
 
 inital_size <- subset(size_EXP1, Date=="20180716") # get starting size of indiivduals from first measurements
 StartSize <- summarySE(inital_size, measurevar="shell_size", groupvars=c("Date")) #summary table for starting shell length = 5.077962 ± 0.6622871 (mean ± SD)
-end_size <- subset(size_EXP1, Date=="20180724") # get the ned size on Day 10 of exposure 1
-
-# overall shell size in EXP1 
-exp1_size_all <- do.call(data.frame,aggregate(shell_size ~ treatment*Date, data = size_EXP1, function(x) c(mean = mean(x), sd = sd(x)))) # mean SD table by  treatments date EXP1
-exp1_size_summary_all <- summarySE(exp1_size_all, measurevar="shell_size.mean", groupvars=c("treatment")) # shell length by  treatments EXP1
-exp1_size_overall <- summarySE(exp1_size_all, measurevar="shell_size.mean") # overall SMR EXP2
-exp1_size_4.treatments <- do.call(data.frame,aggregate(shell_size.x ~ treatment.y*Date.x, data = size_Exp1.T, function(x) c(mean = mean(x), sd = sd(x)))) # mean SD table by  treatments date EXP1
-exp1_size_summary_4.treatments <- summarySE(exp1_size_4.treatments, measurevar="shell_size.x.mean", groupvars=c("treatment.y")) # shell length by  treatments EXP1
-# overall shell size in EXP2
-exp2_size_all <- do.call(data.frame,aggregate(shell_size ~ treatment*Date, data = size_EXP2, function(x) c(mean = mean(x), sd = sd(x)))) # mean SD table by init*sec treatments date EXP2
-exp2_size_summary_all <- summarySE(exp2_size_all, measurevar="shell_size.mean", groupvars=c("treatment")) # shell length by init*sec  treatments EXP2
-exp2_size_all.2 <- do.call(data.frame,aggregate(shell_size ~ Sec.Trt*Date, data = size_EXP2, function(x) c(mean = mean(x), sd = sd(x)))) # mean SD table by sec treatments date EXP2
-exp2_size_summary_all.2 <- summarySE(exp2_size_all.2, measurevar="shell_size.mean", groupvars=c("Sec.Trt")) # shell length by sec  treatments EXP2
-exp2_size_overall <- summarySE(exp2_size_all, measurevar="shell_size.mean") # overall SMR EXP2
-
+end_size <- subset(size_EXP1, Date=="20180724") # view the efinal size on Day 10 of exposure 1
 
 # plot end of exp 1 Day 10 with treatments 
 length_EXP1_Day10 <- ggplot(end_size, aes(x = treatment, y = shell_size, fill = treatment)) +
-      geom_boxplot(alpha = 0.1) + scale_color_grey() + scale_fill_grey() + theme_classic() +
-      ylim(2,8.2) +
-      geom_point(pch = 19, position = position_jitterdodge(0.1), size=1) +
-      #geom_point(aes(fill = treatment), size = 0.5, shape = 21, position = position_jitterdodge(0.05)) +
-      stat_summary(fun.y=mean, geom="point", pch="+", size=3, position = position_jitterdodge(0.01)) +
-      theme(legend.position = c(.92, .9), legend.text=element_text(size=8)) +
-      labs(y="shell length", x = "Treatment", fill="") 
+  geom_boxplot(alpha = 0.1) + scale_color_grey() + scale_fill_grey() + theme_classic() +
+  ylim(2,8.2) +
+  geom_point(pch = 19, position = position_jitterdodge(0.1), size=1) +
+  #geom_point(aes(fill = treatment), size = 0.5, shape = 21, position = position_jitterdodge(0.05)) +
+  stat_summary(fun.y=mean, geom="point", pch="+", size=3, position = position_jitterdodge(0.01)) +
+  theme(legend.position = c(.92, .9), legend.text=element_text(size=8)) +
+  labs(y="shell length", x = "Treatment", fill="") 
 length_EXP1_Day10
+
 
 ### EXP1 ####
 #plot treatments and time (with prePreExposure)
-length_EXP1_plot <- ggplot(size_EXP1_all, aes(x = factor(Day), y = shell_size, fill = treatment)) +
-      geom_boxplot(alpha = 0.1, outlier.shape = 19,
-      outlier.fill = "black", outlier.size = 1, lwd=0.2) + 
-      scale_color_grey() + scale_fill_grey() + theme_classic() +
-      ylim(2,8.2) + scale_x_discrete(limits=c("0",2,5,8,10)) +
-      geom_point(pch = 19, position = position_jitterdodge(0.1), size=0.5) +
-      #geom_point(aes(fill = treatment), size = 0.5, shape = 21, position = position_jitterdodge(0.05)) +
-      stat_summary(fun.y=mean, geom="point", pch="+", size=3, position = position_jitterdodge(0.01)) +
-      theme(legend.position = c(.92, .9), legend.text=element_text(size=8)) +
-      geom_vline(xintercept=c(1.5), linetype="dotted", size=1) + labs(y="shell length", x = "Day", fill="")
-length_EXP1_plot
-
+Exp1.Fig.size.A <- ggplot(size_EXP1_all, aes(x = factor(Day), y = shell_size, fill = treatment)) +
+  theme_classic() +
+  scale_fill_manual(values=c("white", "grey3"), labels=c("Ambient","Elevated")) +
+  geom_boxplot(alpha = 0.5, # color hue
+               width=0.6, # boxplot width
+               outlier.size=0, # make outliers small
+               position = position_dodge(preserve = "single")) + 
+  geom_point(pch = 19, position = position_jitterdodge(.05), size=1) +
+  stat_summary(fun.y=mean, geom = "errorbar", aes(ymax = ..y.., ymin = ..y..), 
+               width = 0.6, size=0.4, linetype = "dashed", position = position_dodge(preserve = "single")) +
+  theme(legend.position = c(0.55,0.96), legend.direction="horizontal", legend.title=element_blank()) +
+  geom_vline(xintercept=c(1.5), linetype="dotted", size=1) +
+  ylim(2,8.2) + 
+  scale_x_discrete(limits=c("0",2,5,8,10)) +
+  labs(y=expression("Shell length"~(mm)), x=expression("Days"))
+Exp1.Fig.size.B <- Exp1.Fig.size.A + 
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5, size=13,color="black"),
+        axis.text.y = element_text(angle = 0, hjust = 0.5, size=13,color="black"),
+        axis.line = element_line(color = 'black'),
+        axis.ticks.length=unit(0.2, "cm"),
+        axis.title.x = element_text(size = 14),
+        axis.title.y = element_text(size = 14)) +
+  scale_y_continuous(limits = c(2, 8), expand = c(0, 0))
+Exp1.Fig.size.B # view the plot
 
 # Two-Way anova for shell size under Initial OA Exposure
 EXP1.size.aov.mod <- aov(shell_size ~ Init.Trt * Day, data = size_EXP1) # run anova on treatment and time
-anova(EXP1.size.aov.mod) # significant effect from  treatment
-
+anova(EXP1.size.aov.mod) # significant effect of time; no effect from treatment
 # Levene's test for homogeneity 
 leveneTest(EXP1.size.aov.mod) # p 0.5609
-# Shapiro test
-EXP1.resp.mod.residuals <- residuals(object = EXP1.size.aov.mod) # call residuals from the model
-shapiro.test(x = EXP1.resp.mod.residuals) # p 1.03e-06
-#post-hoc
-exp1.size.ph <- lsmeans(EXP1.size.aov.mod, pairwise ~  Init.Trt * Day)# pariwise Tukey Post-hoc test between repeated treatments
+# post-hoc
+exp1.size.ph <- lsmeans(EXP1.size.aov.mod, pairwise ~  Day)# pariwise Tukey Post-hoc test between repeated treatments
 exp1.size.ph # view post hoc summary
 E1.pairs.SIZE.05 <- cld(exp1.size.ph, alpha=.05, Letters=letters) #list pairwise tests and letter display p < 0.05
 E1.pairs.SIZE.05 #view results
@@ -1163,87 +879,67 @@ E1.pairs.SIZE.05 #view results
 par(mfrow=c(1,3)) #set plotting configuration
 par(mar=c(1,1,1,1)) #set margins for plots
 hist(residuals(EXP1.size.aov.mod)) #plot histogram of residuals
-shapiro.test(residuals(EXP1.size.aov.mod)) # residuals are normal
 boxplot(residuals(EXP1.size.aov.mod)) #plot boxplot of residuals
 plot(fitted(EXP1.size.aov.mod),residuals(EXP1.size.aov.mod)) 
 
-
-# Linear mixe effects model - Test for size differences in experiment 1
-# size_EXP1$Day <- as.numeric(size_EXP1$Day)
-# Init.lme <- lmer(shell_size ~ Init.Trt*Day + (1|Day), data = size_EXP1) # test for treatment fixed and day as a random factor
-# anova(Init.lme) # anova on the model
-# summary(Init.lme) # view summary
-# m1 <- lme(shell_size~Day*treatment,random=~1|Day,data=size_EXP1) # run same model as lme 
-# anova(m1) # view anova table of lme and compare to anova table from lmer
-# EXP1.lme.size.anovatable <- anova(m1) # assign a name to anova table to save table output later
-# view plots and check for assumptions of normality in residuals
-# par(mfrow=c(1,3)) #set plotting configuration
-# par(mar=c(1,1,1,1)) #set margins for plots
-# hist(residuals(m1)) #plot histogram of residuals
-# boxplot(residuals(m1)) #plot boxplot of residuals
-# plot(fitted(m1),residuals(m1)) #display residuals versus fitter, normal QQ plot, leverage plot
-# shapiro.test(residuals(m1)) # residuals are not normally distributed
-# NO STATISTICAL DIFFERENCE IN SIZE AFTER THE INITIAL EXPOSURE
-
-
-# mean and s.e. table to use for figures (all exp 1 without PreExposure)
-x1 <- do.call(data.frame,aggregate(shell_size ~ Day*treatment, data = size_EXP1, function(x) c(mean = mean(x), se = std.error(x)))) #mean and st. error table
-
-
-
-# Transform size_Exp1 because residuals were not normal in the model
-#reflect data tp transform positive skew (slight positive from histogram)
-# max(size_EXP1$shell_size) # get the max value of exp1 shell size to reflect transform
-# size_EXP1$size_reflect <- sqrt(((max(size_EXP1$shell_size))+1) - size_EXP1$shell_size) # transform via sqrt(1+max - x)
-# shapiro.test(size_EXP1$size_reflect) # normally distributed
-# histogram(size_EXP1$size_reflect) # histogram shows normal didstribution
-
-# linear mixed effects model on the tranfromed size data test 
-# Init.lme.trans <- lmer(size_reflect ~ treatment*Day + (1|Day), data = size_EXP1) # test for treatment fixed and day as a random factor
-# anova(Init.lme.trans)# anova on the model
-# summary(Init.lme.trans)# view summary
-# m1.trans <- lme(size_reflect~treatment*Day,random=~1|Day,data=size_EXP1)# run same model as lme for stats in anova table
-# anova(m1.trans)# view anova table of lme and compare to anova table from lmer
-# EXP1.lme.size.anovatable.transformed <- anova(m1.trans)# assign a name to anova table to save table output later
-# view plots and check for assumptions of normality in residuals
-# par(mfrow=c(1,3)) #set plotting configuration
-# par(mar=c(1,1,1,1)) #set margins for plots
-# hist(residuals(m1.trans)) #plot histogram of residuals
-# boxplot(residuals(m1.trans)) #plot boxplot of residuals
-# plot(fitted(m1.trans),residuals(m1.trans)) #display residuals versus fitter, normal QQ plot, leverage plot
-# shapiro.test(residuals(m1.trans)) # residuals normally distributed
-# NO STATISTICAL DIFFERENCE IN SIZE AFTER THE INITIAL EXPOSURE
-
+Exp1.Fig.size_FINAL <- 
+  Exp1.Fig.size.B +
+  geom_segment(aes(x = 1.6, y = 7.3, xend = 2.4, yend = 7.3)) +
+  geom_segment(aes(x = 2.6, y = 7.3, xend = 3.4, yend = 7.3)) + 
+  geom_segment(aes(x = 3.6, y = 7.3, xend = 4.4, yend = 7.3)) +
+  geom_segment(aes(x = 4.6, y = 7.3, xend = 5.4, yend = 7.3)) +
+  annotate("text", x="2", y=7.2, label = "a", size = 4) + # t-test with p < 0.05 between treatments at day 0
+  annotate("text", x="5", y=7.2, label = "ab", size = 4) + # add text to the graphic for posthoc letters - effect of time
+  annotate("text", x="8", y=7.2, label = "ab", size = 4) + # add text to the graphic for posthoc letters - effect of time
+  annotate("text", x="10", y=7.2, label = "b", size = 4) # add text to the graphic for posthoc letters - effect of time
+Exp1.Fig.size_FINAL
 
 ### EXP2 ####
-#Visualize OA exposure 2
-length_EXP2_plot <- ggplot(size_EXP2, aes(x = factor(Day), y = shell_size, fill = treatment)) +
-      geom_boxplot(alpha = 0.1, outlier.shape = 19,
-      outlier.fill = "black", outlier.size = 1, lwd=0.2) + 
-      scale_color_grey() + scale_fill_grey(start = 0, end = 0.9) + theme_classic() +
-      geom_point(pch = 19, position = position_jitterdodge(0.05), size=0.5) +
-      ylim(2, 8.2) + stat_summary(fun.y=mean, geom="point", pch="+", size=3, position = position_jitterdodge(0.01)) +
-      #geom_point(aes(fill = treatment), size = 0.5, shape = 21, position = position_jitterdodge(0.05)) +
-      theme(legend.position = c(.92, .9), legend.text=element_text(size=8)) +
-      scale_x_discrete(labels = c("0",2,4,6)) +
-      geom_vline(xintercept=c(1.5), linetype="dotted", size=1) + labs(y="shell length", x = "Day", fill="")
-length_EXP2_plot
+#PLOTTING
+Exp2.Fig.size.A <- ggplot(size_EXP2_all, aes(x = factor(Day), y = shell_size, fill = Treat1_Treat2)) +
+  theme_classic() +
+  scale_fill_manual(values=c("white", "white", "grey80", "grey3", "gray50", "grey3"), 
+                    labels=c("Ambient","Ambient × Ambient","Ambient × Elevated","Elevated","Elevated × Ambient","Elevated × Elevated")) +
+  geom_boxplot(alpha = 0.5, # color hue
+               width=0.6, # boxplot width
+               outlier.size=0, # make outliers small
+               position = position_dodge(preserve = "single")) + 
+  geom_point(pch = 19, position = position_jitterdodge(.05), size=1) +
+  stat_summary(fun.y=mean, geom = "errorbar", aes(ymax = ..y.., ymin = ..y..), 
+               width = 0.6, size=0.4, linetype = "dashed", position = position_dodge(preserve = "single")) +
+  theme(legend.position = c(0.55,0.96), legend.direction="horizontal", legend.title=element_blank()) +
+  geom_vline(xintercept=c(1.5), linetype="dotted", size=1) +
+  ylim(2,8.2) + 
+  scale_x_discrete(labels = c("0",2,4,6)) +
+  geom_vline(xintercept=c(1.5), linetype="dotted", size=1) + 
+  labs(y=expression("Shell size"~(mm)), x=expression("Days"))
+Exp2.Fig.size.FINAL <- Exp2.Fig.size.A  + 
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5, size=13,color="black"),
+        axis.text.y = element_text(angle = 0, hjust = 0.5, size=13,color="black"),
+        axis.line = element_line(color = 'black'),
+        axis.ticks.length=unit(0.2, "cm"),
+        axis.title.x = element_text(size = 14),
+        axis.title.y = element_text(size = 14)) +
+  scale_y_continuous(limits = c(2, 8), expand = c(0, 0))
+Exp2.Fig.size.FINAL # view the plot
 
+# ANALYSIS
+# t-test for differences at the end of exp1 (day 10) and start of exp 2 (day 0) by treatment
+exp1_d10.size <- subset(size_EXP1, Date=="20180724") # starting size on Day 10 in Exp 1
+t.test(exp1_d10.size$shell_size~exp1_d10.size$Init.Trt) # p-value = 0.6083; t-test shows no difference between treatment at the start of Exp2
+
+exp2_d0.size <- subset(size_EXP2, Date=="20180807") # starting size on Day 0 in Exp 2
+t.test(exp2_d0.size$shell_size~exp2_d0.size$Init.Trt) # p-value = 0.2531; t-test shows significant difference between treatment at the start of Exp2
 
 # Three-Way anova for shell size under Secondary OA Exposure
 EXP2.size.aov.mod <- aov(shell_size ~ Init.Trt*Sec.Trt* Day, data = size_EXP2.0) # run anova on treatment and time
-anova(EXP2.size.aov.mod) # significant effect from  treatment
-
+anova(EXP2.size.aov.mod) # significant effect fromboth inital and secondary treatment
 # Levene's test for homogeneity 
 leveneTest(EXP2.size.aov.mod) # p 0.8418
-# Shapiro test
-EP2.resp.mod.residuals <- residuals(object = EXP2.size.aov.mod) # call residuals from the model
-shapiro.test(x = EP2.resp.mod.residuals) # p 0.002602
 # plot the residuals
 par(mfrow=c(1,3)) #set plotting configuration
 par(mar=c(1,1,1,1)) #set margins for plots
 hist(residuals(EXP2.size.aov.mod)) #plot histogram of residuals
-shapiro.test(residuals(EXP2.size.aov.mod)) # residuals are normal
 boxplot(residuals(EXP2.size.aov.mod)) #plot boxplot of residuals
 plot(fitted(EXP2.size.aov.mod),residuals(EXP2.size.aov.mod))
 # post-hoc
@@ -1251,340 +947,29 @@ exp2.size.ph <- lsmeans(EXP2.size.aov.mod, pairwise ~  Init.Trt*Sec.Trt* Day)# p
 exp2.size.ph # view post hoc summary
 E2.pairs.SIZE.05 <- cld(exp2.size.ph, alpha=.05, Letters=letters) #list pairwise tests and letter display p < 0.05
 E2.pairs.SIZE.05 #view results
-
-
-# mean and s.e. summary tables for interaction figures 
-x2 <- do.call(data.frame,aggregate(shell_size ~ Day*Init.Trt*Sec.Trt, data = size_EXP2, function(x) c(mean = mean(x), se = std.error(x))))#mean and st. error table (used from plotting later)
-x2.1 <- do.call(data.frame,aggregate(shell_size ~ Init.Trt*Sec.Trt, data = size_EXP2.0, function(x) c(mean = mean(x), se = std.error(x))))#mean and st. error table(used from plotting later)
-x2$treatments <- paste(x2$Init.Trt, x2$Sec.Trt, sep="_") # combine treatments in a column
-
-# linear mixed effects models
-#size_EXP2.0$Day <- as.numeric(size_EXP2.0$Day)
-#Sec.lme.trans <- lmer(shell_size ~ Init.Trt*Sec.Trt + (1|Day/Init.Trt/Sec.Trt), data = size_EXP2.0) # test for treatment fixed and day as a random factor
-#anova(Sec.lme.trans)
-#m2 <- lme(shell_size~Init.Trt*Sec.Trt,random=~1|Day/Init.Trt/Sec.Trt,data=size_EXP2.0) # lme model with initial and secondary treatment effects fixed and time random
-#anova(m2) # view anova table
-#summary(m2) # view summary of anova table
-#EXP2.lme.size.anovatable <- anova(m2) # name anova table to save output later
-#exp2.ph <- lsmeans(m2, pairwise ~ Init.Trt*Sec.Trt)# pariwise Tukey Post-hoc test between repeated treatments
-#exp2.ph # view post hoc summary
-#E2.pairs.SIZE.05 <- cld(exp2.ph, alpha=.05, Letters=letters) #list pairwise tests and letter display p < 0.05
-#E2.pairs.SIZE.05 #view results
-#E2.pairs.SIZE.1 <- cld(exp2.ph, alpha=.1, Letters=letters) #list pairwise tests and letter display p < 0.1
-#E2.pairs.SIZE.1 #view results
-
-#plot the residuals
-#par(mfrow=c(1,3)) #set plotting configuration
-#par(mar=c(1,1,1,1)) #set margins for plots
-#hist(residuals(m2)) #plot histogram of residuals
-#boxplot(residuals(m2)) #plot boxplot of residuals
-#plot( fitted(m2),residuals(m2)) #display residuals versus fitter, normal QQ plot, leverage plot
-#shapiro.test(residuals(m2)) # residuals NOT normally distributed
-
-
-# TEST FOR EFFECTS OF THE FOUR TREATMENT GROUPS EXP1 --> EXP2
-# This can decipher whether the significant effect of secondary treatment derived from size
-# differences at the end of exp1 (day 10) and start of exp 2 (day 0)
-exp2_d0.size <- subset(size_EXP2, Date=="20180807") # starting size on Day 0 in Exp 2
-exp1_d10.size <- subset(size_EXP1, Date=="20180724") # starting size on Day 10 in Exp 1
-
-#Day 10 in Exp 1
-treat.exp1.d10 <- aov(shell_size~Treat1_Treat2,data=exp1_d10.size) # anova by treatment on initial shell size EXP2
-summary(treat.exp1.d10) # no difference in shell size between the four  treatment
-Fig.d10.EXP1.treatment <- ggboxplot(exp1_d10.size, x = "Treat1_Treat2", y = "shell_size", color = "treatment", ylab= "Shell Size (mm)",palette = c(), main= "Day 2 Exp 1") 
-Fig.d10.EXP1.treatment # plotted data
-
-# Day 0 in Exp 2
-treat.exp2.d0 <- aov(shell_size~Treat1_Treat2,data=exp2_d0.size) # anova by treatment on initial shell size EXP2
-summary(treat.exp2.d0) # no difference in shell size between the four  treatment
-Fig.d2.EXP2.treatment <- ggboxplot(exp2_d0.size, x = "Treat1_Treat2", y = "shell_size", color = "treatment", ylab= "Shell Size (mm)",palette = c(), main= "Day 2 Exp 1") 
-Fig.d2.EXP2.treatment # plotted data
-
-
-#Exposure2 Plotting
-
-#barplots for mean SD exp1 - exp2
-exp1_size_summary_4.treatments # exp 1 - 4 treatments
-exp2_size_summary_all# exp 2 - 4 treatments
-exp1_size_summary_4.treatments$trial <- "initial" # add column for trial to merge
-colnames(exp1_size_summary_4.treatments)[1] <- "treatment" # to match and merge with eXP2
-colnames(exp1_size_summary_4.treatments)[3] <- "shell_size.mean"
-exp2_size_summary_all$trial <- "secondary" # add column for trial to merge
-SIZETable_EXP_1_2 <- rbind(exp1_size_summary_4.treatments, exp2_size_summary_all) # bind rows by treatment column
-SIZETable_EXP_1_2 # view table
-
-# barplot size rate exp1 and exp 2
-barplot_size <- ggplot(SIZETable_EXP_1_2, aes(x=as.factor(treatment), y=shell_size.mean , fill=trial)) +
-  geom_bar(position=position_dodge(), stat="identity", colour='black') +
-  geom_errorbar(aes(ymin=shell_size.mean-se, ymax=shell_size.mean+se), width=.2,position=position_dodge(.9)) +
-  xlab("treatment initial*secondary") +
-  ylab("Shell length") +
-  ylim(0,8) +
-  theme_bw() + #Set the background color
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), #Set the text angle
-        axis.line = element_line(color = 'black'), #Set the axes color
-        panel.border = element_blank(), #Set the border
-        panel.grid.major = element_blank(), #Set the major gridlines
-        panel.grid.minor = element_blank(), #Set the minor gridlines
-        plot.background=element_blank(), #Set the plot background
-        legend.position='none') + #remove legend background
-  ggtitle("Shell length exp1 and exp 2 mean SE") +
-  theme(plot.title = element_text(face = 'bold', 
-                                  size = 12, 
-                                  hjust = 0))
-barplot_size
-
-#  mean percent difference between exposure periods
-percent_av_size_exposures <- SIZETable_EXP_1_2            %>% # view the table
-                            select(trial, shell_size.mean  ) %>% # select desired data
-                            group_by(trial)               %>% # group by exposure period 'trial'
-                            dplyr::summarise(mean = mean(shell_size.mean), # summary table
-                            min = min(shell_size.mean),
-                            sd = sd(shell_size.mean),
-                            SEM = (sd/sqrt(n())),
-                            count =n())                   %>%
-                            mutate(pct.chg = (100*((mean[2] - (mean[1]))/(mean[1])))) # calculate the percent change 
-percent_av_size_exposures # view summary table 
-
-# percent difference between treatment
-percent_av_size <- SIZETable_EXP_1_2        %>% # view the table
-                  group_by(treatment)                       %>%
-                  spread(trial, shell_size.mean)            %>% # create a horizonatal table for the mean size in initial (n = 4 per treat) and secondary (n=4 per treat)
-                  select(treatment, initial, secondary)    %>% # select only the treatments and the mean shell size  
-                  mutate(secondary=lag(secondary))          %>% # shift the secondary down to align with
-                  na.omit()                                 %>% # omit na 
-                  mutate(pct.chg = (100*((secondary - (initial))/(initial)))) # calculate the percent change from (secondary - initial / secondary) *100
-
-percent_av_size  # view the table
-
-
-# plot
-barplot_size_percent <- ggplot(percent_av_size, aes(x=as.factor(treatment), y=pct.chg)) +
-  geom_bar(position=position_dodge(), stat="identity", colour='black') +
-  xlab("treatment initial*secondary") +
-  ylab("Shell length") +
-  ylim(0,15) +
-  theme_bw() + #Set the background color
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), #Set the text angle
-        axis.line = element_line(color = 'black'), #Set the axes color
-        panel.border = element_blank(), #Set the border
-        panel.grid.major = element_blank(), #Set the major gridlines
-        panel.grid.minor = element_blank(), #Set the minor gridlines
-        plot.background=element_blank(), #Set the plot background
-        legend.position='none') + #remove legend background
-  ggtitle("Percent diff in average shell length exp1 - exp2") +
-  theme(plot.title = element_text(face = 'bold', 
-                                  size = 12, 
-                                  hjust = 0))
-barplot_size_percent # view the plot
-
-
-
-### Interaction Plots ####
-
-# anovas for all days seperately (explore difference between means within day)
-size_EXP2.0_d2 <- subset(size_EXP2.0, Day==2)
-d2_EXP2 <- aov(shell_size~treatment, data=size_EXP2.0_d2)
-summary(d2_EXP2)
-TukeyHSD(d2_EXP2)
-
-size_EXP2.0_d4 <- subset(size_EXP2.0, Day==4)
-d4_EXP2 <- aov(shell_size~treatment, data=size_EXP2.0_d4)
-summary(d4_EXP2)
-TukeyHSD(d4_EXP2)
-
-size_EXP2.0_d6 <- subset(size_EXP2.0, Day==6)
-d6_EXP2 <- aov(shell_size~treatment, data=size_EXP2.0_d6)
-summary(d6_EXP2)
-TukeyHSD(d6_EXP2)
-
-alldays_EXP2 <- aov(shell_size~treatment, data=size_EXP2.0)
-summary(alldays_EXP2)
-TukeyHSD(alldays_EXP2)
-
-
-#Day 0
-Day0 <- subset(x2, Day==0)
-
-Fig.Exp2.D0.size <- ggplot(Day0, aes(x=Sec.Trt, y=shell_size.mean, group=Init.Trt)) + 
-  geom_errorbar(aes(ymin=Day0$shell_size.mean-Day0$shell_size.se, ymax=Day0$shell_size.mean+Day0$shell_size.se), colour="black", width=.1, position = position_dodge(width = 0.05)) +
-  geom_line(aes(linetype=Init.Trt), size = 0.5, position = position_dodge(width = 0.05)) +   
-  geom_point(aes(shape=Init.Trt), size = 3, position = position_dodge(width = 0.05)) +
-  #annotate("text", x=0.85, y=1.3, label = "b", size = 3) + #add text to the graphic for posthoc letters
-  #annotate("text", x=c(0.85,0.85,2.2,2.2,2.25), y=c(0.9,0.95,0.88, 0.92,0.97), label = "ab", size = 3) + #add text to the graphic for posthoc letters
-  xlab("Secondary Treatment") +
-  ylab("Shell size (mm)") +
-  ylim(5,7) +
-  theme_bw() + #Set the background color
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), #Set the text angle
-        axis.line = element_line(color = 'black'), #Set the axes color
-        panel.border = element_blank(), #Set the border
-        panel.grid.major = element_blank(), #Set the major gridlines
-        panel.grid.minor = element_blank(), #Set the minor gridlines
-        plot.background=element_blank(), #Set the plot background
-        legend.position='none') + #remove legend background
-  ggtitle(" Secondary Exposure Day 0") +
-  theme(plot.title = element_text(face = 'bold', 
-                                  size = 12, 
-                                  hjust = 0))
-
-Fig.Exp2.D0.size
-
-#Day 2
-Day2 <- subset(x2, Day==2)
-
-Fig.Exp2.D2.size <- ggplot(Day2, aes(x=Sec.Trt, y=shell_size.mean, group=Init.Trt)) + 
-  geom_errorbar(aes(ymin=Day2$shell_size.mean-Day2$shell_size.se, ymax=Day2$shell_size.mean+Day2$shell_size.se), colour="black", width=.1, position = position_dodge(width = 0.05)) +
-  geom_line(aes(linetype=Init.Trt), size = 0.5, position = position_dodge(width = 0.05)) +   
-  geom_point(aes(shape=Init.Trt), size = 3, position = position_dodge(width = 0.05)) +
-  #annotate("text", x=0.85, y=1.3, label = "b", size = 3) + #add text to the graphic for posthoc letters
-  #annotate("text", x=c(0.85,0.85,2.2,2.2,2.25), y=c(0.9,0.95,0.88, 0.92,0.97), label = "ab", size = 3) + #add text to the graphic for posthoc letters
-  xlab("Secondary Treatment") +
-  ylab("Shell size (mm)") +
-  ylim(5,7) +
-  theme_bw() + #Set the background color
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), #Set the text angle
-        axis.line = element_line(color = 'black'), #Set the axes color
-        panel.border = element_blank(), #Set the border
-        panel.grid.major = element_blank(), #Set the major gridlines
-        panel.grid.minor = element_blank(), #Set the minor gridlines
-        plot.background=element_blank(), #Set the plot background
-        legend.position='none') + #remove legend background
-  ggtitle(" Secondary Exposure Day 2") +
-  theme(plot.title = element_text(face = 'bold', 
-                                  size = 12, 
-                                  hjust = 0))
-
-Fig.Exp2.D2.size
-
-#Day 4
-Day4 <- subset(x2, Day==4)
-
-Fig.Exp2.D4.size <- ggplot(Day4, aes(x=Sec.Trt, y=shell_size.mean, group=Init.Trt)) + 
-  geom_errorbar(aes(ymin=Day4$shell_size.mean-Day4$shell_size.se, ymax=Day4$shell_size.mean+Day4$shell_size.se), colour="black", width=.1, position = position_dodge(width = 0.05)) +
-  geom_line(aes(linetype=Init.Trt), size = 0.5, position = position_dodge(width = 0.05)) +   
-  geom_point(aes(shape=Init.Trt), size = 3, position = position_dodge(width = 0.05)) +
-  #annotate("text", x=0.85, y=1.3, label = "b", size = 3) + #add text to the graphic for posthoc letters
-  #annotate("text", x=c(0.85,0.85,2.2,2.2,2.25), y=c(0.9,0.95,0.88, 0.92,0.97), label = "ab", size = 3) + #add text to the graphic for posthoc letters
-  xlab("Secondary Treatment") +
-  ylab("Shell size (mm)") +
-  ylim(5,7) +
-  theme_bw() + #Set the background color
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), #Set the text angle
-        axis.line = element_line(color = 'black'), #Set the axes color
-        panel.border = element_blank(), #Set the border
-        panel.grid.major = element_blank(), #Set the major gridlines
-        panel.grid.minor = element_blank(), #Set the minor gridlines
-        plot.background=element_blank(), #Set the plot background
-        legend.position='none') + #remove legend background
-  ggtitle(" Secondary Exposure Day 4") +
-  theme(plot.title = element_text(face = 'bold', 
-                                  size = 12, 
-                                  hjust = 0))
-
-Fig.Exp2.D4.size
-
-#Day 6
-Day6 <- subset(x2, Day==6)
-
-Fig.Exp2.D6.size <- ggplot(Day6, aes(x=Sec.Trt, y=shell_size.mean, group=Init.Trt)) + 
-  geom_errorbar(aes(ymin=Day6$shell_size.mean-Day6$shell_size.se, ymax=Day6$shell_size.mean+Day6$shell_size.se), colour="black", width=.1, position = position_dodge(width = 0.05)) +
-  geom_line(aes(linetype=Init.Trt), size = 0.5, position = position_dodge(width = 0.05)) +   
-  geom_point(aes(shape=Init.Trt), size = 3, position = position_dodge(width = 0.05)) +
-  #annotate("text", x=0.85, y=1.3, label = "b", size = 3) + #add text to the graphic for posthoc letters
-  #annotate("text", x=c(0.85,0.85,2.2,2.2,2.25), y=c(0.9,0.95,0.88, 0.92,0.97), label = "ab", size = 3) + #add text to the graphic for posthoc letters
-  xlab("Secondary Treatment") +
-  ylab("Shell size (mm)") +
-  ylim(5,7) +
-  theme_bw() + #Set the background color
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), #Set the text angle
-        axis.line = element_line(color = 'black'), #Set the axes color
-        panel.border = element_blank(), #Set the border
-        panel.grid.major = element_blank(), #Set the major gridlines
-        panel.grid.minor = element_blank(), #Set the minor gridlines
-        plot.background=element_blank(), #Set the plot background
-        legend.position='none') + #remove legend background
-  ggtitle(" Secondary Exposure Day 6") +
-  theme(plot.title = element_text(face = 'bold', 
-                                  size = 12, 
-                                  hjust = 0))
-
-Fig.Exp2.D6.size
-
-#Averaged across Days
-
-Fig.Exp2.All.size <- ggplot(x2.1, aes(x=Sec.Trt, y=shell_size.mean, group=Init.Trt)) + 
-  geom_errorbar(aes(ymin=x2.1$shell_size.mean-x2.1$shell_size.se, ymax=x2.1$shell_size.mean+x2.1$shell_size.se), colour="black", width=.1, position = position_dodge(width = 0.05)) +
-  geom_line(aes(linetype=Init.Trt), size = 0.5, position = position_dodge(width = 0.05)) +   
-  geom_point(aes(shape=Init.Trt), size = 3, position = position_dodge(width = 0.05)) +
-  annotate("text", x="Ambient", y=6, label = "a", size = 3) + #add text to the graphic for posthoc letters
-  annotate("text", x="Ambient", y=5.8, label = "ab", size = 3) + #add text to the graphic for posthoc letters
-  annotate("text", x="Low", y=5.82, label = "ab", size = 3) + 
-  annotate("text", x="Low", y=5.57, label = "b", size = 3) + 
-  xlab("Secondary Treatment") +
-  ylab("Shell size (mm)") +
-  ylim(5,7) +
-  labs(fill="") +
-  theme_bw() + #Set the background color
-  theme(axis.text.x = element_text(vjust = 0.5, hjust=1), #Set the text angle
-        axis.line = element_line(color = 'black'), #Set the axes color
-        panel.border = element_blank(), #Set the border
-        panel.grid.major = element_blank(), #Set the major gridlines
-        panel.grid.minor = element_blank(), #Set the minor gridlines
-        plot.background=element_blank(),
-        legend.position = c(.92, .9), legend.text=element_text(size=8)) + #remove legend background
-  #ggtitle(" Secondary Exposure All Days") +
-  theme(plot.title = element_text(face = 'bold', 
-                                  size = 12, 
-                                  hjust = 0))
-
-Fig.Exp2.All.size
-
-# plot all data with mean standard error and time
-LINEFig.Exp2.All.size <- ggplot(x2, aes(x=Day, y=shell_size.mean , group=treatments)) + 
-  geom_errorbar(aes(ymin=x2$shell_size.mean -x2$shell_size.se  , ymax=x2$shell_size.mean +x2$shell_size.se), colour="black", width=.1, position = position_dodge(width = 0.05)) +
-  geom_line(aes(linetype=treatments), size = 0.5, position = position_dodge(width = 0.05)) +   
-  geom_point(aes(shape=treatments), size = 3, position = position_dodge(width = 0.05)) +
-  #annotate("text", x=0.85, y=1.3, label = "b", size = 3) + #add text to the graphic for posthoc letters
-  #annotate("text", x=c(0.85,0.85,2.2,2.2,2.25), y=c(0.9,0.95,0.88, 0.92,0.97), label = "ab", size = 3) + #add text to the graphic for posthoc letters
-  xlab("Secondary Treatment") +
-  ylab("Respiration rate") +
-  ylim(5,7) +
-  theme_bw() + #Set the background color
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), #Set the text angle
-        axis.line = element_line(color = 'black'), #Set the axes color
-        panel.border = element_blank(), #Set the border
-        panel.grid.major = element_blank(), #Set the major gridlines
-        panel.grid.minor = element_blank(), #Set the minor gridlines
-        plot.background=element_blank(), #Set the plot background
-        legend.position='none') + #remove legend background
-  ggtitle(" Secondary Exposure All Days") +
-  theme(plot.title = element_text(face = 'bold', 
-                                  size = 12, 
-                                  hjust = 0))
-
-LINEFig.Exp2.All.size
-
-
-### Ouput tables and figs ####
-
-# Saving anova tables 
-
-#Table1.Exp1.Size <- data.frame(EXP1.lme.size.anovatable)
-#write.csv(file="Output/Geoduck_Size.table_Exp1.csv", Table1.Exp1.Size)
-
-#Table12.Exp2.Size <- data.frame(EXP2.lme.size.anovatable)
-#write.csv(file="Output/Geoduck_Size.table_Exp2.csv", Table12.Exp2.Size)
+# effect of initial exposure
+exp2.size.ph.initial <- lsmeans(EXP2.size.aov.mod, pairwise ~  Init.Trt)# pariwise Tukey Post-hoc test between repeated treatments
+exp2.size.ph.initial # view post hoc summary
+EXP2_perc_diff_InitTrmt <- ((5.820324 - 5.586145) / (5.820324)) *100
+EXP2_perc_diff_InitTrmt
+# effect of secondary exposure
+exp2.size.ph.sec <- lsmeans(EXP2.size.aov.mod, pairwise ~  Sec.Trt)# pariwise Tukey Post-hoc test between repeated treatments
+exp2.size.ph.sec  # view post hoc summary
+EXP2_perc_diff_SecTrmt <- ((5.796007 - 5.610461) / (5.796007)) *100
+EXP2_perc_diff_SecTrmt
 
 # Assemble output plots
-figure_1 <- ggarrange(resp_EXP1_plot, resp_EXP2_plot, length_EXP1_plot, length_EXP2_plot,
-                    labels = c("A) SMR Exposure 1", "B) SMR Exposure 2", "C) Shell length Exposure 1", "D) Shell length Exposure 2"),
-                    ncol = 2, nrow = 2)
-figure_2 <- ggarrange(resp_EXP1_plot_2, Fig.Exp2.All.resp, length_EXP1_Day10, Fig.Exp2.All.size,
-                      labels = c("A) SMR Exposure 1", "B) SMR Interaction Plot", "C) Shell length Exposure 1 (Day 10)", "D) Shell length Interaction Plot"),
-                      ncol = 2, nrow = 2)
+figure_1 <- ggarrange(Exp1.Fig.resp_FINAL, Exp2.Fig.resp_FINAL,
+                      ncol = 1, nrow = 2)
+figure_1 # view the figure
+
+figure_2 <- ggarrange(Exp1.Fig.size_FINAL, Exp2.Fig.size.FINAL,
+                      ncol = 1, nrow = 2)
+figure_2 # view the figure
+
 
 # Saving output plots
+ggsave(file="Output/Supplem.Fig.conical.pH.temp.pdf", Supplem.Fig.conical.pH.temp, width = 12, height = 8, units = c("in"))
 ggsave(file="Output/Output_Figure_1.pdf", figure_1, width = 12, height = 8, units = c("in"))
 ggsave(file="Output/Output_Figure_2.pdf", figure_2, width = 12, height = 8, units = c("in"))
 
