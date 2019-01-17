@@ -633,9 +633,16 @@ Exp1.Fig.resp_total
 
 # ANALYSIS
 # Two-Way anova for respiration rate under Initial OA Exposure
-resp_EXP1$Day <- as.character(resp_EXP1$Day) # convert day to character 
+resp_EXP1$Day <- as.factor(resp_EXP1$Day) # convert day to character 
 EXP1.resp.aov.mod <- aov(FINALresp ~ Init.treat * Day, data = resp_EXP1) # run anova on treatment and time
 anova(EXP1.resp.aov.mod) # significant effect of  treatment 
+# post-hoc
+exp1.resp.ph <- lsmeans(EXP1.resp.aov.mod, pairwise ~  Init.treat * Day)# pariwise Tukey Post-hoc test between repeated treatments
+exp1.resp.ph # view post hoc summary
+E1.pairs.RESP.05 <- cld(exp1.resp.ph, alpha=.05, Letters=letters) #list pairwise tests and letter display p < 0.05
+E1.pairs.RESP.05 #view results
+E1.pairs.RESP.1 <- cld(exp1.resp.ph, alpha=.1, Letters=letters) #list pairwise tests and letter display p < 0.1
+E1.pairs.RESP.1 #view results
 # Levene's test for homogeneity 
 leveneTest(EXP1.resp.aov.mod) # p 0.2236
 # Shapiro test
@@ -764,7 +771,7 @@ plot(fitted(EXP2.resp.aov.mod),residuals(EXP2.resp.aov.mod))
 
 # t-test for differences at the end of exp1 (day 10) and start of exp 2 (day 0) by treatment
 exp1_d10.resp  <- subset(resp_EXP1, Date=="20180724") #  resp  on Day 10 in Exp 1
-t.test(exp1_d10.resp$FINALresp~exp1_d10.resp$Init.treat) # p-value = 0.08471; t-test shows no difference between treatment at end of exp 1
+t.test(exp1_d10.resp$FINALresp~exp1_d10.resp$Init.treat) # p-value = 0.08471; t-test shows marginal difference between treatment at end of exp 1
 
 exp2_d0.resp <- subset(resp_EXP2, Date=="20180807") # starting resp  on Day 0 in Exp 2
 t.test(exp2_d0.resp$FINALresp~exp2_d0.resp$Init.treat) # p-value = 0.01469; t-test shows significant difference between treatment at the start of Exp2
