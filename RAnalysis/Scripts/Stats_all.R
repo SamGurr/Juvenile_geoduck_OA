@@ -1,7 +1,8 @@
 #Title: Juvenile Repeat Exposure Experiment 2018
 #Project: FFAR
 #Author: HM Putnam & Sam Gurr
-#Edited by: Sam Gurr
+#Edite
+#20180801_Apex_Data_Output.csvd by: Sam Gurr
 #Date Last Modified: 20181225
 #See Readme file for details
 
@@ -37,11 +38,10 @@ library(reshape)        # Version: 0.8.7, Date/Publication: 2017-08-06, Depends:
 library(multcompView)   # Version: 0.1-7, Date/Publication: 2015-07-31, Imports: grid
 library(tidyr)          # Version: 0.8.1, Date/Publication: 2018-05-18, Depends: R (>= 3.1) Imports: dplyr (>= 0.7.0), glue, magrittr, purrr, Rcpp, rlang, stringi, tibble, tidyselect
 library(Rcmdr)          # Version: 2.5-1. Date/Publication: 2018-09-11, Depends: R (>= 3.5.0), grDevices, graphics, methods, stats, utils,splines, RcmdrMisc (>= 2.5-0), car (>= 3.0-1), effects (>=4.0-3) Imports: tcltk, tcltk2 (>= 1.2-6), abind, relimp (>= 1.0-5)
-
+library(Rmisc)
 #Required Data files
 # ----Conical Chemistry (APEX data)
 #20180724_Apex_Data_Output.csv
-#20180801_Apex_Data_Output.csv
 #20180805_Apex_Data_Output.csv
 #20180814_Apex_Data_Output.csv
 # ----Heath Tray Chemistry (discrete probe data)
@@ -55,7 +55,7 @@ library(Rcmdr)          # Version: 2.5-1. Date/Publication: 2018-09-11, Depends:
 #All_growth_data.csv
 
 #set working directory--------------------------------------------------------------------------------------------------
-setwd("C:/Users/samjg/Documents/My_Projects/Juvenile_geoduck_OA_2018/RAnalysis/") #set working
+setwd("C:/Users/samjg/Documents/My_Projects/Juvenile_geoduck_OA/RAnalysis/") #set working
 
 ### CONICAL Seawater chemistry Data - Analysis, Graphs, Tables (APEX DATA) ####
 
@@ -117,14 +117,19 @@ APEX.pH.Exp1 <- hourly.pH %>%
 APEX.pH.commongarden <- hourly.pH %>%
   filter(days >= 10 & days <= 23) # pH APEX common garden
 
+APEX.pH.commongarden <- APEX.pH.commongarden[-(1300:1338),] 
+tail(APEX.pH.commongarden)
+APEX.pH.commongarden <- APEX.pH.commongarden %>% 
+                        filter(mean > 7.7) # delete the last few datapoints, high st.dev becasue conditions were returning to elevated
+
 APEX.pH.Exp2 <- hourly.pH %>%
   filter(days >= 24 & days <= 30) # pH APEX Exp2
 
 # Plot daily averages of pH data for the complete experiment (continuous APEX data)
 APEX.pH.Exp1$datehour <- as.POSIXct(APEX.pH.Exp1$datehour, format="%Y-%m-%d %H:%M:%S") #format datehour 
-Exp1.pH.Apex.FIG <- ggplot(APEX.pH.Exp1, aes(x=datehour, y=mean, group=Treatment)) +#Plot average diurnal cycle of temperature data
+Exp1.pH.Apex.FIG <- ggplot(APEX.pH.Exp1, aes(x=datehour, y=mean, group=Treatment, color=Treatment)) +#Plot average diurnal cycle of temperature data
                     #geom_line() +
-                    geom_point(aes(x = datehour, y = mean, group=Treatment), colour="black", cex=1) + #Plot points using time as the x axis, light as the Y axis and black dots
+                    geom_point(aes(x = datehour, y = mean, group=Treatment, color=Treatment),cex=1) + #Plot points using time as the x axis, light as the Y axis and black dots
                     geom_errorbar(aes(x=datehour, ymax=mean+se, ymin=mean-se), 
                                   position=position_dodge(0.9), data=APEX.pH.Exp1, col="black", width=0) + #set values for standard error bars and offset on the X axis for clarity
                     ggtitle("A) Exp1") + #Label the graph with the main title
@@ -148,12 +153,13 @@ Exp1.pH.Apex.FIG <- ggplot(APEX.pH.Exp1, aes(x=datehour, y=mean, group=Treatment
                           legend.text = element_text(size = 8), #set the legend text size
                           legend.key = element_blank(), #remove the legend background
                           legend.title = element_text(size=8, face="bold")) #Justify the title to the top left
-Exp1.pH.Apex.FIG  
+
+Exp1.pH.Apex.FIG <- Exp1.pH.Apex.FIG + scale_color_manual(values=c("#009E73", "#0072B2", "#E69F00", "#D55E00")) #colorblindess color theme
 
 APEX.pH.commongarden$datehour <- as.POSIXct(APEX.pH.commongarden$datehour, format="%Y-%m-%d %H:%M:%S")#format datehour 
-CommGarden.pH.Apex.FIG <- ggplot(APEX.pH.commongarden, aes(x=datehour, y=mean, group=Treatment)) +#Plot average diurnal cycle of temperature data
+CommGarden.pH.Apex.FIG <- ggplot(APEX.pH.commongarden, aes(x=datehour, y=mean, group=Treatment, color=Treatment)) +#Plot average diurnal cycle of temperature data
                             #geom_line() +
-                            geom_point(aes(x = datehour, y = mean, group=Treatment), colour="black", cex=1) + #Plot points using time as the x axis, light as the Y axis and black dots
+                            geom_point(aes(x = datehour, y = mean, group=Treatment), cex=1) + #Plot points using time as the x axis, light as the Y axis and black dots
                             geom_errorbar(aes(x=datehour, ymax=mean+se, ymin=mean-se), 
                                           position=position_dodge(0.9), data=APEX.pH.commongarden, col="black", width=0) + #set values for standard error bars and offset on the X axis for clarity
                             ggtitle("B) Common garden") + #Label the graph with the main title
@@ -176,12 +182,13 @@ CommGarden.pH.Apex.FIG <- ggplot(APEX.pH.commongarden, aes(x=datehour, y=mean, g
                                   legend.text = element_text(size = 8), #set the legend text size
                                   legend.key = element_blank(), #remove the legend background
                                   legend.title = element_text(size=8, face="bold")) #Justify the title to the top left
-CommGarden.pH.Apex.FIG 
+CommGarden.pH.Apex.FIG <- CommGarden.pH.Apex.FIG + scale_color_manual(values=c("#009E73", "#0072B2", "#E69F00", "#D55E00")) #colorblindess color theme
+CommGarden.pH.Apex.FIG #view graph
 
 APEX.pH.Exp2$datehour <- as.POSIXct(APEX.pH.Exp2$datehour, format="%Y-%m-%d %H:%M:%S")#format datehour 
-Exp2.pH.Apex.FIG <- ggplot(APEX.pH.Exp2, aes(x=datehour, y=mean, group=Treatment)) +#Plot average diurnal cycle of temperature data
+Exp2.pH.Apex.FIG <- ggplot(APEX.pH.Exp2, aes(x=datehour, y=mean, group=Treatment, color=Treatment)) +#Plot average diurnal cycle of temperature data
                     #geom_line() +
-                    geom_point(aes(x = datehour, y = mean, group=Treatment), colour="black", cex=1) + #Plot points using time as the x axis, light as the Y axis and black dots
+                    geom_point(aes(x = datehour, y = mean, group=Treatment), cex=1) + #Plot points using time as the x axis, light as the Y axis and black dots
                     geom_errorbar(aes(x=datehour, ymax=mean+se, ymin=mean-se), 
                                   position=position_dodge(0.9), data=APEX.pH.Exp2, col="black", width=0) + #set values for standard error bars and offset on the X axis for clarity
                     ggtitle("C) Exp2") + #Label the graph with the main title
@@ -204,8 +211,8 @@ Exp2.pH.Apex.FIG <- ggplot(APEX.pH.Exp2, aes(x=datehour, y=mean, group=Treatment
                           legend.text = element_text(size = 8), #set the legend text size
                           legend.key = element_blank(), #remove the legend background
                           legend.title = element_text(size=8, face="bold")) #Justify the title to the top left
-Exp2.pH.Apex.FIG 
-
+Exp2.pH.Apex.FIG <- Exp2.pH.Apex.FIG + scale_color_manual(values=c("#009E73", "#0072B2", "#E69F00", "#D55E00")) #colorblindess color theme
+Exp2.pH.Apex.FIG #view graph
 
 
 ## Temp tables and graTemps for all exposures
@@ -239,9 +246,9 @@ APEX.Temp.Exp2 <- hourly.Temp %>%
 
 # Plot daily averages of Temp data for the complete experiment (continuous APEX data)
 APEX.Temp.Exp1$datehour <- as.POSIXct(APEX.Temp.Exp1$datehour, format="%Y-%m-%d %H:%M:%S") #format datehour 
-Exp1.Temp.Apex.FIG <- ggplot(APEX.Temp.Exp1, aes(x=datehour, y=mean, group=Treatment)) +#Plot average diurnal cycle of temperature data
+Exp1.Temp.Apex.FIG <- ggplot(APEX.Temp.Exp1, aes(x=datehour, y=mean, group=Treatment, color=Treatment)) +#Plot average diurnal cycle of temperature data
                       #geom_line() +
-                      geom_point(aes(x = datehour, y = mean, group=Treatment), colour="black", cex=1) + #Plot points using time as the x axis, light as the Y axis and black dots
+                      geom_point(aes(x = datehour, y = mean, group=Treatment), cex=1) + #Plot points using time as the x axis, light as the Y axis and black dots
                       geom_errorbar(aes(x=datehour, ymax=mean+se, ymin=mean-se), 
                                     position=position_dodge(0.9), data=APEX.Temp.Exp1, col="black", width=0) + #set values for standard error bars and offset on the X axis for clarity
                       ggtitle("D) Exp1") + #Label the graTemp with the main title
@@ -265,12 +272,13 @@ Exp1.Temp.Apex.FIG <- ggplot(APEX.Temp.Exp1, aes(x=datehour, y=mean, group=Treat
                             legend.text = element_text(size = 8), #set the legend text size
                             legend.key = element_blank(), #remove the legend background
                             legend.title = element_text(size=8, face="bold")) #Justify the title to the top left
-Exp1.Temp.Apex.FIG  
+Exp1.Temp.Apex.FIG   <- Exp1.Temp.Apex.FIG   + scale_color_manual(values=c("#009E73", "#0072B2", "#E69F00", "#D55E00")) #colorblindess color theme
+Exp1.Temp.Apex.FIG   #view graph
 
 APEX.Temp.commongarden$datehour <- as.POSIXct(APEX.Temp.commongarden$datehour, format="%Y-%m-%d %H:%M:%S")#format datehour 
-CommGarden.Temp.Apex.FIG <- ggplot(APEX.Temp.commongarden, aes(x=datehour, y=mean, group=Treatment)) +#Plot average diurnal cycle of temperature data
+CommGarden.Temp.Apex.FIG <- ggplot(APEX.Temp.commongarden, aes(x=datehour, y=mean, group=Treatment, color=Treatment)) +#Plot average diurnal cycle of temperature data
                             #geom_line() +
-                            geom_point(aes(x = datehour, y = mean, group=Treatment), colour="black", cex=1) + #Plot points using time as the x axis, light as the Y axis and black dots
+                            geom_point(aes(x = datehour, y = mean, group=Treatment), cex=1) + #Plot points using time as the x axis, light as the Y axis and black dots
                             geom_errorbar(aes(x=datehour, ymax=mean+se, ymin=mean-se), 
                                           position=position_dodge(0.9), data=APEX.Temp.commongarden, col="black", width=0) + #set values for standard error bars and offset on the X axis for clarity
                             ggtitle("E) Common garden") + #Label the graTemp with the main title
@@ -293,12 +301,13 @@ CommGarden.Temp.Apex.FIG <- ggplot(APEX.Temp.commongarden, aes(x=datehour, y=mea
                                   legend.text = element_text(size = 8), #set the legend text size
                                   legend.key = element_blank(), #remove the legend background
                                   legend.title = element_text(size=8, face="bold")) #Justify the title to the top left
-CommGarden.Temp.Apex.FIG 
+CommGarden.Temp.Apex.FIG   <- CommGarden.Temp.Apex.FIG   + scale_color_manual(values=c("#009E73", "#0072B2", "#E69F00", "#D55E00")) #colorblindess color theme
+CommGarden.Temp.Apex.FIG   #view graph
 
 APEX.Temp.Exp2$datehour <- as.POSIXct(APEX.Temp.Exp2$datehour, format="%Y-%m-%d %H:%M:%S")#format datehour 
-Exp2.Temp.Apex.FIG <- ggplot(APEX.Temp.Exp2, aes(x=datehour, y=mean, group=Treatment)) +#Plot average diurnal cycle of temperature data
+Exp2.Temp.Apex.FIG <- ggplot(APEX.Temp.Exp2, aes(x=datehour, y=mean, group=Treatment, color=Treatment)) +#Plot average diurnal cycle of temperature data
                       #geom_line() +
-                      geom_point(aes(x = datehour, y = mean, group=Treatment), colour="black", cex=1) + #Plot points using time as the x axis, light as the Y axis and black dots
+                      geom_point(aes(x = datehour, y = mean, group=Treatment), cex=1) + #Plot points using time as the x axis, light as the Y axis and black dots
                       geom_errorbar(aes(x=datehour, ymax=mean+se, ymin=mean-se), 
                                     position=position_dodge(0.9), data=APEX.Temp.Exp2, col="black", width=0) + #set values for standard error bars and offset on the X axis for clarity
                       ggtitle("F) Exp2") + #Label the graTemp with the main title
@@ -321,7 +330,8 @@ Exp2.Temp.Apex.FIG <- ggplot(APEX.Temp.Exp2, aes(x=datehour, y=mean, group=Treat
                             legend.text = element_text(size = 8), #set the legend text size
                             legend.key = element_blank(), #remove the legend background
                             legend.title = element_text(size=8, face="bold")) #Justify the title to the top left
-Exp2.Temp.Apex.FIG 
+Exp2.Temp.Apex.FIG   <- Exp2.Temp.Apex.FIG   + scale_color_manual(values=c("#009E73", "#0072B2", "#E69F00", "#D55E00")) #colorblindess color theme
+Exp2.Temp.Apex.FIG   #view graph
 
 Supplem.Fig.conical.pH.temp <- grid.arrange(arrangeGrob(Exp1.pH.Apex.FIG, CommGarden.pH.Apex.FIG, Exp2.pH.Apex.FIG, left="Conical pH", ncol=3), 
                                             arrangeGrob(Exp1.Temp.Apex.FIG, CommGarden.Temp.Apex.FIG, Exp2.Temp.Apex.FIG, 
@@ -880,6 +890,7 @@ leveneTest(EXP1.size.aov.mod) # p 0.5609
 # post-hoc
 exp1.size.ph <- lsmeans(EXP1.size.aov.mod, pairwise ~  Day)# pariwise Tukey Post-hoc test between repeated treatments
 exp1.size.ph # view post hoc summary
+
 E1.pairs.SIZE.05 <- cld(exp1.size.ph, alpha=.05, Letters=letters) #list pairwise tests and letter display p < 0.05
 E1.pairs.SIZE.05 #view results
 # plot the residuals
@@ -955,7 +966,7 @@ exp2.size.ph # view post hoc summary
 E2.pairs.SIZE.05 <- cld(exp2.size.ph, alpha=.05, Letters=letters) #list pairwise tests and letter display p < 0.05
 E2.pairs.SIZE.05 #view results
 # effect of initial exposure
-exp2.size.ph.initial <- lsmeans(EXP2.size.aov.mod, pairwise ~  Init.Trt)# pariwise Tukey Post-hoc test between repeated treatments
+exp2.size.ph.initial <- lsmeans(EXP2.size.aov.mod, pairwise ~  Init.Trt*Sec.Trt* Day)# pariwise Tukey Post-hoc test between repeated treatments
 exp2.size.ph.initial # view post hoc summary
 EXP2_perc_diff_InitTrmt <- ((5.820324 - 5.586145) / (5.820324)) *100
 EXP2_perc_diff_InitTrmt
@@ -980,3 +991,220 @@ ggsave(file="Output/Supplem.Fig.conical.pH.temp.pdf", Supplem.Fig.conical.pH.tem
 ggsave(file="Output/Output_Figure_1.pdf", figure_1, width = 12, height = 8, units = c("in"))
 ggsave(file="Output/Output_Figure_2.pdf", figure_2, width = 12, height = 8, units = c("in"))
 
+
+# 157 days post experiment in common garden heathstack
+
+# Shell Size
+size_157days_postEXP<-read.csv("Data/Data_157days_post_experiment/Shell_size/Shell_size_157days_post.csv", header=T, sep=",", na.string="NA", as.is=T) 
+size_157days_postEXP <- na.omit(size_157days_postEXP)
+size_157days_postEXP # look at the data
+names(size_157days_postEXP) # look at names of data
+
+# both Treat1_Treat2
+size_table_Treat1Treat2 <- do.call(data.frame,aggregate(Length_mm ~ Treat1_Treat2,
+                                                        data = size_157days_postEXP, function(x) c(mean = mean(x), se = std.error(x))))
+size_table_Treat1Treat2 # view the table
+
+# analysis
+size_157days_postEXP.aov.mod <- aov(Length_mm ~ Init_treat*Sec_treat, data = size_157days_postEXP) # run anova on Treat1_Treat2 and time
+anova(size_157days_postEXP.aov.mod) # significant effect of initial treatment
+# plot the residuals and test with levene's test
+par(mfrow=c(1,3)) #set plotting configuration
+par(mar=c(1,1,1,1)) #set margins for plots
+leveneTest(size_157days_postEXP.aov.mod) # p = 0.4317
+hist(residuals(size_157days_postEXP.aov.mod)) #plot histogram of residuals
+boxplot(residuals(size_157days_postEXP.aov.mod)) #plot boxplot of residuals
+plot(fitted(size_157days_postEXP.aov.mod),residuals(size_157days_postEXP.aov.mod))
+
+#summary table based on the anova results of a significant effect of initial treatment
+sumLENGTH_means.157days <- summarySE(size_157days_postEXP, 
+                             measurevar="Length_mm", 
+                             groupvars=c("Init_treat")) # summarize previous table for overall Treat1_Treat2 
+sumLENGTH_means.157days # view the table
+percentdiff.157days <- ((sumLENGTH_means.157days[2,3] - sumLENGTH_means.157days[1,3])/sumLENGTH_means.157days[2,3])*100 # calculate percent difference
+percentdiff.157days # 5.8% greater shell length from animals initally exposed to low pH in initial exp trial
+
+# significant effect graph
+size_graph_INITIAL.157days <- ggplot(size_157days_postEXP, aes(x = factor(Init_treat), y = Length_mm, fill = Init_treat)) +
+  theme_classic() +
+  scale_fill_manual(values=c("white", "grey3"), 
+                    labels=c("Ambient", "Elevated")) +
+  geom_boxplot(alpha = 0.5, # color hue
+               width=0.6, # boxplot width
+               outlier.size=0, # make outliers small
+               position = position_dodge(preserve = "single")) + 
+  geom_point(pch = 19, position = position_jitterdodge(.05), size=1) +
+  stat_summary(fun.y=mean, geom = "errorbar", aes(ymax = ..y.., ymin = ..y..), 
+               width = 0.6, size=0.4, linetype = "dashed", position = position_dodge(preserve = "single")) +
+  theme(legend.position = c(0.55,0.96), legend.direction="horizontal", legend.title=element_blank()) +
+  ylim(4,13) + 
+  scale_x_discrete(labels = c("Ambient","Elevated")) +
+  labs(y=expression("Shell size"~(mm)), x=expression("Initial treatment"))
+size_graph_INITIAL.157days
+
+#Both treatments from secnondary exposure graph
+size_graph_INITIAL.SECOND.157days <- ggplot(size_157days_postEXP, aes(x = factor(Treat1_Treat2), y = Length_mm, fill = Treat1_Treat2)) +
+  theme_classic() +
+  scale_fill_manual(values=c("white", "grey80",  "gray50", "grey3"), 
+                    labels=c("Ambient × Ambient","Ambient × Elevated","Elevated × Ambient","Elevated × Elevated")) +
+  geom_boxplot(alpha = 0.5, # color hue
+               width=0.6, # boxplot width
+               outlier.size=0, # make outliers small
+               position = position_dodge(preserve = "single")) + 
+  geom_point(pch = 19, position = position_jitterdodge(.05), size=1) +
+  stat_summary(fun.y=mean, geom = "errorbar", aes(ymax = ..y.., ymin = ..y..), 
+               width = 0.6, size=0.4, linetype = "dashed", position = position_dodge(preserve = "single")) +
+  theme(legend.position = c(0.55,0.96), legend.direction="horizontal", legend.title=element_blank()) +
+  ylim(4,13) + 
+  scale_x_discrete(labels = c("Ambient × Ambient","Ambient × Elevated","Elevated × Ambient","Elevated × Elevated")) +
+  labs(y=expression("Shell size"~(mm)), x=expression("Initial×Secondary treatment"))
+size_graph_INITIAL.SECOND.157days
+
+# Respiration
+# call the whole record NOTE: initial data in first 5 minutes shows higher respriration rates
+# than the rest of the record due to mixing, this leads to outliers in automated analysis
+# used a truncated 5-20 minute record to pull representative data after vials were thorougly mixed
+# line below is the whole record
+# RESP.reference.resp157days.postEXP<-read.csv("Data/Data_157days_post_experiment/Respiration/Resp_data_157days_whole_record.csv", header=T, sep=",", na.string="NA", as.is=T) 
+
+# call the truncated 5-20 minute record
+RESP.reference.resp157days.postEXP<-read.csv("Data/Data_157days_post_experiment/Respiration/Resp_157d_post_alpha0.4_10-20mins.csv", header=T, sep=",", na.string="NA", as.is=T) 
+SIZE.reference.resp157days.postEXP<-read.csv("Data/Data_157days_post_experiment/Respiration/Size_reference_157days_post.csv", header=T, sep=",", na.string="NA", as.is=T) 
+RESP.CALC.157.days.postEXP <- merge(RESP.reference.resp157days.postEXP, SIZE.reference.resp157days.postEXP, by=c("Date","SDR_position", "RUN")) # merge the individual info (size, estimate number of larvae) by common columns 
+RESP.CALC.157.days.postEXP # view new file
+
+# from visual of Lolin plots - RUN1 C1, C4, and C5 were bad data, non linear and likely an error (air bubble)
+x <- RESP.CALC.157.days.postEXP[-c(25,31,33),] # x = Resp data with out these points (stated above)
+JUVresp_all <- x %>% 
+  filter((substr(x$Notes, 1,9)) == "juveniles") # call only resp values of juveniles
+
+JUVresp_RUN1 <- JUVresp_all %>%  filter(JUVresp_all$RUN == 1) # call run 1
+JUVresp_RUN2 <- JUVresp_all %>%  filter(JUVresp_all$RUN == 2)  # call run 2
+
+#blanks Run1 
+JUVresp_blanks_RUN1 <- JUVresp_RUN1 %>% 
+  filter(JUVresp_RUN1$Tank.ID == "Blank") # call only blanks
+JUVresp_blankMEANS_RUN1 <- JUVresp_blanks_RUN1 %>% 
+  summarise(mean_Lpc = mean(abs(Lpc)),mean_Leq = mean(abs(Leq)), mean_Lz = mean(abs(Lz))) # summarize the blanks into a mean value
+
+#blanks Run2
+JUVresp_blanks_RUN2 <- JUVresp_RUN2 %>% 
+  filter(JUVresp_RUN2$Tank.ID == "Blank") # call only blanks
+JUVresp_blankMEANS_RUN2 <- JUVresp_blanks_RUN2 %>% 
+  summarise(mean_Lpc = mean(abs(Lpc)),mean_Leq = mean(abs(Leq)), mean_Lz = mean(abs(Lz))) # summarize the blanks into a mean value
+
+# resp rates Run1
+JUVresp_geoduck_RUN1 <- JUVresp_RUN1 %>% 
+  filter(!is.na(length_number.individuals))
+
+JUVresp_geoduck_RUN1$Resp_rate_ug.mol <-
+  ((((((abs(JUVresp_geoduck_RUN1$Lpc)) - (JUVresp_blankMEANS_RUN1$mean_Lpc))*(4/1000))*(60))*31.998)/(JUVresp_geoduck_RUN1$length_number.individuals))
+JUVresp_geoduck_RUN1$Resp_rate_ug.mol
+
+# resp rates Run2
+JUVresp_geoduck_RUN2 <- JUVresp_RUN2 %>% 
+  filter(!is.na(length_number.individuals))
+
+JUVresp_geoduck_RUN2$Resp_rate_ug.mol <-
+  ((((((abs(JUVresp_geoduck_RUN2$Lpc)) - (JUVresp_blankMEANS_RUN2$mean_Lpc))*(4/2000))*(60))*32.998)/(JUVresp_geoduck_RUN2$length_number.individuals))
+JUVresp_geoduck_RUN2$Resp_rate_ug.mol
+
+# merge the two datasets
+JUVresp_geoduck <- rbind(JUVresp_geoduck_RUN1,JUVresp_geoduck_RUN2)
+# remove the two negative values in run 2
+JUVresp_geoduck <- JUVresp_geoduck %>% filter(JUVresp_geoduck$Resp_rate_ug.mol > 0) # only resp rates over zero
+
+#summary tables for both exposures
+JUVresp_table_treatments_ALL <- JUVresp_geoduck %>%
+  group_by(Treatment) %>% #group the dataset by BOTH INITIAL AND SECONDARY TREATMENT
+  summarise(mean_resp = mean(Resp_rate_ug.mol),
+            min_resp = min(Resp_rate_ug.mol),
+            sd_resp = sd(Resp_rate_ug.mol),
+            SEM = ((sd(Resp_rate_ug.mol))/sqrt(n())),
+            count =n()) %>% # get the count by leaving n open
+  arrange(desc(min_resp)) # makes table in descending order 
+JUVresp_table_treatments_ALL # view table
+# table for initial exposure
+JUVresp_table_treatments_INITIAL <- JUVresp_geoduck %>%
+  group_by(Treat.initial) %>% #group the dataset by INITIAL TREATMENT
+  summarise(mean_resp = mean(Resp_rate_ug.mol),
+            min_resp = min(Resp_rate_ug.mol),
+            sd_resp = sd(Resp_rate_ug.mol),
+            SEM = ((sd(Resp_rate_ug.mol))/sqrt(n())),
+            count =n()) %>% # get the count by leaving n open
+  arrange(desc(min_resp)) # makes table in descending order 
+JUVresp_table_treatments_INITIAL # view table
+# table for secondary exposure
+JUVresp_table_treatments_SECONDARY<- JUVresp_geoduck %>%
+  group_by(Treat.Secondary) %>% #group the dataset by SECONDARY TREATMENT
+  summarise(mean_resp = mean(Resp_rate_ug.mol),
+            min_resp = min(Resp_rate_ug.mol),
+            sd_resp = sd(Resp_rate_ug.mol),
+            SEM = ((sd(Resp_rate_ug.mol))/sqrt(n())),
+            count =n()) %>% # get the count by leaving n open
+  arrange(desc(min_resp)) # makes table in descending order 
+JUVresp_table_treatments_SECONDARY # view table
+
+# run the two way anova 
+JUVresp.mod  <- aov(Resp_rate_ug.mol~Treat.initial*Treat.Secondary*Treatment, data = JUVresp_geoduck)
+anova(JUVresp.mod) # anova results
+par(mfrow=c(1,3)) #set plotting configuration
+par(mar=c(1,1,1,1)) #set margins for plots
+leveneTest(JUVresp.mod) # p = 0.9491
+hist(residuals(JUVresp.mod)) #plot histogram of residuals
+boxplot(residuals(JUVresp.mod)) #plot boxplot of residuals
+plot(fitted(JUVresp.mod),residuals(JUVresp.mod))
+library(Rmisc)
+sum_JUVresp_means <- summarySE(JUVresp_geoduck, 
+                               measurevar="Resp_rate_ug.mol", 
+                               groupvars=c("Treat.Secondary")) # summarize previous table for overall treatment 
+sum_JUVresp_means # view the table
+percentdiff.JUVresp <- ((sum_JUVresp_means[2,3] - sum_JUVresp_means[1,3])/sum_JUVresp_means[2,3])*100 # calculate percent difference
+percentdiff.JUVresp # 53.08305% greater respiration rate from animals under secondary exposure to elevated conditions
+
+
+# significant effect graph
+JUVresp_geoduck_INITIAL.157days <- ggplot(JUVresp_geoduck, aes(x = factor(Treat.initial ), y = Resp_rate_ug.mol, fill = Treat.initial )) +
+  theme_classic() +
+  scale_fill_manual(values=c("white", "grey3"), 
+                    labels=c("Ambient", "Elevated")) +
+  geom_boxplot(alpha = 0.5, # color hue
+               width=0.6, # boxplot width
+               outlier.size=0, # make outliers small
+               position = position_dodge(preserve = "single")) + 
+  geom_point(pch = 19, position = position_jitterdodge(.05), size=1) +
+  stat_summary(fun.y=mean, geom = "errorbar", aes(ymax = ..y.., ymin = ..y..), 
+               width = 0.6, size=0.4, linetype = "dashed", position = position_dodge(preserve = "single")) +
+  theme(legend.position = c(0.55,0.96), legend.direction="horizontal", legend.title=element_blank()) +
+  ylim(0,3) + 
+  scale_x_discrete(labels = c("Ambient","Elevated")) +
+  labs(y=expression("Respiration rate"~(~µg~O[2]*hr^{-1}*mm^{-1})), x=expression("Initial treatment"))
+JUVresp_geoduck_INITIAL.157days # view the graph
+
+#Both treatments from secnondary exposure graph
+JUVresp_geoduck_INITIAL.SECOND.157days <- ggplot(JUVresp_geoduck, aes(x = factor(Treatment), y = Resp_rate_ug.mol, fill = Treatment)) +
+  theme_classic() +
+  scale_fill_manual(values=c("white",  "grey80", "gray50", "grey3"), 
+                    labels=c("Ambient × Ambient","Ambient × Elevated","Elevated × Ambient","Elevated × Elevated")) +
+  geom_boxplot(alpha = 0.5, # color hue
+               width=0.6, # boxplot width
+               outlier.size=0, # make outliers small
+               position = position_dodge(preserve = "single")) + 
+  geom_point(pch = 19, position = position_jitterdodge(.05), size=1) +
+  stat_summary(fun.y=mean, geom = "errorbar", aes(ymax = ..y.., ymin = ..y..), 
+               width = 0.6, size=0.4, linetype = "dashed", position = position_dodge(preserve = "single")) +
+  theme(legend.position = c(0.55,0.96), legend.direction="horizontal", legend.title=element_blank()) +
+  ylim(0,3) + 
+  scale_x_discrete(labels = c("Ambient × Ambient","Ambient × Elevated","Elevated × Ambient","Elevated × Elevated")) +
+  labs(y=expression("Respiration rate"~(~µg~O[2]*hr^{-1}*mm^{-1})),  x = "Initial×Secondary treatment", fill= "") 
+JUVresp_geoduck_INITIAL.SECOND.157days # view the graph
+
+figure_supplementary_157d <- ggarrange(size_graph_INITIAL.157days, 
+                                       size_graph_INITIAL.SECOND.157days,
+                                       JUVresp_geoduck_INITIAL.157days,
+                                       JUVresp_geoduck_INITIAL.SECOND.157days,
+                                       ncol = 2, nrow = 2)
+figure_supplementary_157d # view the figure
+
+# Saving output plots
+ggsave(file="Output/Fig.resp.size.157d.post.pdf", figure_supplementary_157d, width = 14, height = 8, units = c("in"))
