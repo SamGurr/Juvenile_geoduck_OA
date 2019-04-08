@@ -3,13 +3,13 @@
 #Author: HM Putnam & Sam Gurr
 #Edite
 #20180801_Apex_Data_Output.csvd by: Sam Gurr
-#Date Last Modified: 20181225
+#Date Last Modified: 20190407
 #See Readme file for details
 
 rm(list=ls())
 ## Install packages if not already in your library
 if ("dplyr" %in% rownames(installed.packages()) == 'FALSE') install.packages('dplyr') 
-if ("plyr" %in% rownames(installed.packages()) == 'FALSE') install.packages('plyr') 
+#if ("plyr" %in% rownames(installed.packages()) == 'FALSE') install.packages('plyr') 
 if ("ggplot2" %in% rownames(installed.packages()) == 'FALSE') install.packages('ggplot2') 
 if ("ggpubr" %in% rownames(installed.packages()) == 'FALSE') install_github('ggpubr') 
 if ("Rmisc" %in% rownames(installed.packages()) == 'FALSE') install.packages('Rmisc') 
@@ -25,7 +25,7 @@ if ("Rcmdr" %in% rownames(installed.packages()) == 'FALSE') install.packages('Rc
 
 # Load packages and pacage version/date/import/depends info
 library(dplyr)          # Version 0.7.6, Packaged: 2018-06-27, Depends: R (>= 3.1.2)Imports: assertthat (>= 0.2.0), bindrcpp (>= 0.2.0.9000), glue (>=1.1.1), magrittr (>= 1.5), methods, pkgconfig (>= 2.0.1), R6(>= 2.2.2), Rcpp (>= 0.12.15), rlang (>= 0.2.0), tibble (>=1.3.1), tidyselect (>= 0.2.3), utils
-library(plyr)           # Version 1.8.4, Packaged: 2016-06-07, Depends: R (>= 3.1.0) Imports: Rcpp (>= 0.11.0)
+#library(plyr)           # Version 1.8.4, Packaged: 2016-06-07, Depends: R (>= 3.1.0) Imports: Rcpp (>= 0.11.0)
 library(ggplot2)        # Version 2.2.1, Packaged: 2016-12-30, Depends: R (>= 3.1)Imports: digest, grid, gtable (>= 0.1.1), MASS, plyr (>= 1.7.1),reshape2, scales (>= 0.4.1), stats, tibble, lazyeval
 library(ggpubr)         # Version: 0.1.8 Date: 2018-08-30, Depends: R (>= 3.1.0), ggplot2, magrittrImports: ggrepel, grid, ggsci, stats, utils, tidyr, purrr, dplyr(>=0.7.1), cowplot, ggsignif, scales, gridExtra, glue, polynom
 library(Rmisc)          # Version: 1.5 Packaged: 2013-10-21, Depends: lattice, plyr
@@ -111,17 +111,28 @@ hourly.pH <- hourly.pH[!(hourly.pH$se > 0.2),] # ommit rows with high stand erro
 hourly.pH #view data
 
 # subset the data
+# Initial exposure pH
 APEX.pH.Exp1 <- hourly.pH %>%
   filter(days <= 9) # pH APEX Exp1
+#check for the transition data from elevated to ambient for supplementary figure
+LowEXP_1 <- APEX.pH.Exp1 %>%  
+  filter(APEX.pH.Exp1$Treatment=="Low_1") # subset a lwo treatment conical
+tail(LowEXP_1, n = 40) # rows 223:228 shows transition to ambiet common garden
+LowEXP_2 <- APEX.pH.Exp1 %>%  
+  filter(APEX.pH.Exp1$Treatment=="Low_2") # subset a lwo treatment conical
+tail(LowEXP_2, n = 40) # rows 223:228 shows transition to ambiet common garden
 
+APEX.pH.Exp1 <- APEX.pH.Exp1[-c(223:228, 451:456), ] # ommit these data for the supplementary figure
+
+# common garden pH
 APEX.pH.commongarden <- hourly.pH %>%
   filter(days >= 10 & days <= 23) # pH APEX common garden
-
-APEX.pH.commongarden <- APEX.pH.commongarden[-(1300:1338),] 
-tail(APEX.pH.commongarden)
+APEX.pH.commongarden <- APEX.pH.commongarden[-(1300:1338),] # delete the transition data after common garden
+tail(APEX.pH.commongarden) # look at the end of the dataset - some data show transition to elevated
 APEX.pH.commongarden <- APEX.pH.commongarden %>% 
                         filter(mean > 7.7) # delete the last few datapoints, high st.dev becasue conditions were returning to elevated
 
+# secondary exposure pH
 APEX.pH.Exp2 <- hourly.pH %>%
   filter(days >= 24 & days <= 30) # pH APEX Exp2
 
@@ -155,8 +166,9 @@ Exp1.pH.Apex.FIG <- ggplot(APEX.pH.Exp1, aes(x=datehour, y=mean, group=Treatment
                           legend.title = element_text(size=8, face="bold")) #Justify the title to the top left
 
 Exp1.pH.Apex.FIG <- Exp1.pH.Apex.FIG + scale_color_manual(values=c("#009E73", "#0072B2", "#E69F00", "#D55E00")) #colorblindess color theme
+Exp1.pH.Apex.FIG # view figure
 
-APEX.pH.commongarden$datehour <- as.POSIXct(APEX.pH.commongarden$datehour, format="%Y-%m-%d %H:%M:%S")#format datehour 
+APEX.pH.commongarden$datehour <- as.POSIXct(APEX.pH.commongarden$datehour, format="%Y-%m-%d %H:%M:%S") #format datehour 
 CommGarden.pH.Apex.FIG <- ggplot(APEX.pH.commongarden, aes(x=datehour, y=mean, group=Treatment, color=Treatment)) +#Plot average diurnal cycle of temperature data
                             #geom_line() +
                             geom_point(aes(x = datehour, y = mean, group=Treatment), cex=1) + #Plot points using time as the x axis, light as the Y axis and black dots
@@ -183,7 +195,9 @@ CommGarden.pH.Apex.FIG <- ggplot(APEX.pH.commongarden, aes(x=datehour, y=mean, g
                                   legend.key = element_blank(), #remove the legend background
                                   legend.title = element_text(size=8, face="bold")) #Justify the title to the top left
 CommGarden.pH.Apex.FIG <- CommGarden.pH.Apex.FIG + scale_color_manual(values=c("#009E73", "#0072B2", "#E69F00", "#D55E00")) #colorblindess color theme
-CommGarden.pH.Apex.FIG #view graph
+
+#CommGarden.pH.Apex.FIG <- CommGarden.pH.Apex.FIG + scale_x_continuous(breaks=number_ticks(10))
+
 
 APEX.pH.Exp2$datehour <- as.POSIXct(APEX.pH.Exp2$datehour, format="%Y-%m-%d %H:%M:%S")#format datehour 
 Exp2.pH.Apex.FIG <- ggplot(APEX.pH.Exp2, aes(x=datehour, y=mean, group=Treatment, color=Treatment)) +#Plot average diurnal cycle of temperature data
@@ -344,6 +358,16 @@ Supplem.Fig.conical.pH.temp <- grid.arrange(arrangeGrob(Exp1.pH.Apex.FIG, CommGa
 flow<-read.csv("Data/Flow_rates.csv", header=T, sep=",", na.string="NA", as.is=T) #upload file
 flow # view the data
 
+flow_summary <-flow %>% 
+  summarise(mean_LPM= mean(LPM),
+            max_LPM = max(LPM),
+            min_LPM = min(LPM),
+            sd_LPM = sd(LPM),
+            SEM = ((sd(LPM))/sqrt(n())),
+            count = n()) %>% # get the count by leaving n open
+  arrange(desc(min_LPM)) # makes table in descending order 
+flow_summary # view table
+
 EXP1 <- subset(flow, Exp.num=="EXP1") #initial 10-day trial, subset entire dataset resp by column nsame "Exp.num" == Exp1
 flow_EXP1 <- subset(EXP1, Day!=0) # ommit day 0
 
@@ -403,6 +427,79 @@ chem.exp2$Exposure <- "Exp2"
 chem.exp2$tank.name <- substr(chem.exp2$Tank, start = 10, stop = 13) # new column for tank name without date
 
 chem.exp_1_2 <- rbind(chem.exp1,chem.exp2) # bind exposure 1 and 2
+
+chem.exp_1_2_pH_table <- aggregate(chem.exp_1_2$pH, list(chem.exp_1_2$Treatment), mean)
+
+# get the range of pH total scale in experiments 1 and 2
+chem.exp_1_data <- chem.exp_1_2 %>% filter(chem.exp_1_2$Exposure=="Exp1") # exp 1
+chem.exp_2_data <- chem.exp_1_2 %>% filter(chem.exp_1_2$Exposure=="Exp2") # exp 2
+# experiment 1 pH table
+chem.exp_1_pH_table <- chem.exp_1_data %>% 
+  group_by(Treatment) %>% #group the dataset by BOTH INITIAL AND SECONDARY TREATMENT
+  summarise(mean_pH= mean(pH),
+            max_pH = max(pH),
+            min_pH = min(pH),
+            sd_pH = sd(pH),
+            SEM = ((sd(pH))/sqrt(n())),
+            count = n()) %>% # get the count by leaving n open
+  arrange(desc(min_pH)) # makes table in descending order 
+chem.exp_1_pH_table # view table
+
+# experiment 2 pH table
+chem.exp_2_pH_table <- chem.exp_2_data %>% 
+  group_by(Treatment) %>% #group the dataset by BOTH INITIAL AND SECONDARY TREATMENT
+  summarise(mean_pH= mean(pH),
+            max_pH = max(pH),
+            min_pH = min(pH),
+            sd_pH = sd(pH),
+            SEM = ((sd(pH))/sqrt(n())),
+            count = n()) %>% # get the count by leaving n open
+  arrange(desc(min_pH)) # makes table in descending order 
+chem.exp_2_pH_table # view table
+
+#plot pH dta
+plot_pH <- ggplot(chem.exp_1_2, aes(x = factor(Treatment), y = pH, fill = Exposure)) +
+  scale_fill_manual(values=c("white", "grey3"), labels=c("Ambient","Elevated")) +
+  geom_boxplot(alpha = 0.5, # color hue
+               width=0.6, # boxplot width
+               outlier.size=0, # make outliers small
+               position = position_dodge(preserve = "single")) + 
+  geom_point(pch = 19, position = position_jitterdodge(.05), size=1) 
+plot_pH # view plot
+
+# experiment 1 pCO2 table
+chem.exp_1_pCO2_table <- chem.exp_1_data %>% 
+  group_by(Treatment) %>% #group the dataset by BOTH INITIAL AND SECONDARY TREATMENT
+  summarise(mean_pCO2 = mean(pCO2),
+            max_pCO2 = max(pCO2),
+            min_pCO2 = min(pCO2),
+            sd_pH = sd(pCO2),
+            SEM = ((sd(pCO2))/sqrt(n())),
+            count = n()) %>% # get the count by leaving n open
+  arrange(desc(min_pCO2)) # makes table in descending order 
+chem.exp_1_pCO2_table # view table
+
+# experiment 2 pCO2 table
+chem.exp_2_pCO2_table <- chem.exp_2_data %>% 
+  group_by(Treatment) %>% #group the dataset by BOTH INITIAL AND SECONDARY TREATMENT
+  summarise(mean_pCO2 = mean(pCO2),
+            max_pCO2 = max(pCO2),
+            min_pCO2 = min(pCO2),
+            sd_pH = sd(pCO2),
+            SEM = ((sd(pCO2))/sqrt(n())),
+            count = n()) %>% # get the count by leaving n open
+  arrange(desc(min_pCO2)) # makes table in descending order 
+chem.exp_2_pCO2_table # view table
+# plot pCO2 data
+plot_pCO2 <- ggplot(chem.exp_1_2, aes(x = factor(Treatment), y = pCO2, fill = Exposure)) +
+  scale_fill_manual(values=c("white", "grey3"), labels=c("Ambient","Elevated")) +
+  geom_boxplot(alpha = 0.5, # color hue
+               width=0.6, # boxplot width
+               outlier.size=0, # make outliers small
+               position = position_dodge(preserve = "single")) + 
+  geom_point(pch = 19, position = position_jitterdodge(.05), size=1) 
+plot_pCO2 # view plot
+
 
 chem.common.garden <-chem.exp[132:156,] # common garden between exposure periods
 chem.common.garden$Exposure <- "Common_garden" 
@@ -643,9 +740,15 @@ Exp1.Fig.resp_total
 
 # ANALYSIS
 # Two-Way anova for respiration rate under Initial OA Exposure
+hist(resp_EXP1$FINALresp) # view histogram of the final respiration data for experiment 1 - negative skew
+shapiro.test(resp_EXP1$FINALresp) # shaprio test shows resp values are not normally distributed
+shapiro.test(sqrt(resp_EXP1$FINALresp)) # square root transform for positive skew
+EXP1.resp.sqrt <- (sqrt(resp_EXP1$FINALresp)) # call the transformation for the model EXP1.resp.sqrt
 resp_EXP1$Day <- as.factor(resp_EXP1$Day) # convert day to character 
 EXP1.resp.aov.mod <- aov(FINALresp ~ Init.treat * Day, data = resp_EXP1) # run anova on treatment and time
 anova(EXP1.resp.aov.mod) # significant effect of  treatment 
+# Levene's test for homogeneity 
+leveneTest(EXP1.resp.aov.mod) # p 0.2236
 # post-hoc
 exp1.resp.ph <- lsmeans(EXP1.resp.aov.mod, pairwise ~  Init.treat * Day)# pariwise Tukey Post-hoc test between repeated treatments
 exp1.resp.ph # view post hoc summary
@@ -653,8 +756,6 @@ E1.pairs.RESP.05 <- cld(exp1.resp.ph, alpha=.05, Letters=letters) #list pairwise
 E1.pairs.RESP.05 #view results
 E1.pairs.RESP.1 <- cld(exp1.resp.ph, alpha=.1, Letters=letters) #list pairwise tests and letter display p < 0.1
 E1.pairs.RESP.1 #view results
-# Levene's test for homogeneity 
-leveneTest(EXP1.resp.aov.mod) # p 0.2236
 # Shapiro test
 EXP1.resp.mod.residuals <- residuals(object = EXP1.resp.aov.mod) # call residuals from the model
 shapiro.test(x = EXP1.resp.mod.residuals) #  0.09055
@@ -665,6 +766,8 @@ hist(residuals(EXP1.resp.aov.mod)) #plot histogram of residuals
 shapiro.test(residuals(EXP1.resp.aov.mod)) # residuals are normal
 boxplot(residuals(EXP1.resp.aov.mod)) #plot boxplot of residuals
 plot(fitted(EXP1.resp.aov.mod),residuals(EXP1.resp.aov.mod)) 
+qqnorm(residuals(EXP1.resp.aov.mod)) # qqplot
+
 # explore the effect
 #summary tables to calculate the percent difference between resp in treatments
 sumresp_EXP1 <- summarySE(resp_EXP1, 
@@ -756,28 +859,43 @@ Exp2.Fig.resp.B # view the plot
 
 # ANALYSIS
 # Three-Way anova for respiration rate under Secondary OA Exposure
-resp_EXP2_2.4.6.$Day <- as.character(resp_EXP2_2.4.6.$Day) # covert day to character 
+hist(resp_EXP2_2.4.6.$FINALresp) # histogram looks positive skew
+shapiro.test(resp_EXP2_2.4.6.$FINALresp) # not normally distributed
+hist(sqrt(resp_EXP2_2.4.6.$FINALresp)) # view historgram of squre root transformation for positive skew
+shapiro.test(sqrt(resp_EXP2_2.4.6.$FINALresp)) # square root transformed is normally distributed
+EXP2.resp.sqrt <- (sqrt(resp_EXP2_2.4.6.$FINALresp))
+resp_EXP2_2.4.6.$Day <- as.character(resp_EXP2_2.4.6.$Day) # covert day to character to run the model
 EXP2.resp.aov.mod <- aov(FINALresp ~ Init.treat*Sec.treat*Day, data = resp_EXP2_2.4.6.) # run anova on treatment and time
 anova(EXP2.resp.aov.mod) # significant effect of time and marginal effect from secondary treatment
 # Levene's test for homogeneity 
 leveneTest(EXP2.resp.aov.mod) # p 0.4541
 # Shapiro test
 EXP2.resp.mod.residuals <- residuals(object = EXP2.resp.aov.mod) # call residuals from the model
-shapiro.test(x = EXP2.resp.mod.residuals) # 0.005096
+shapiro.test(x = EXP2.resp.mod.residuals) # 0.5754
 #post-hoc for sig affect of time
-exp2.resp.day <- lsmeans(EXP2.resp.aov.mod, pairwise ~ Day)# pariwise Tukey Post-hoc test between repeated treatments
+exp2.resp.day <- lsmeans(EXP2.resp.aov.mod, pairwise ~ Init.treat*Sec.treat*Day) # pariwise Tukey Post-hoc test between repeated treatments
 exp2.resp.day # view post hoc summary
 E2.pairs.RESP.05 <- cld(exp2.resp.day, alpha=.05, Letters=letters) #list pairwise tests and letter display p < 0.05
-E2.pairs.RESP.05 #view results
+E2.pairs.RESP.05 #view results - no pairwise differences for the entire model
 E2.pairs.RESP.1 <- cld(exp2.resp.day, alpha=.1, Letters=letters) #list pairwise tests and letter display p < 0.05
-E2.pairs.RESP.1 #view results
+E2.pairs.RESP.1 # view results
 # plot the residuals
 par(mfrow=c(1,3)) #set plotting configuration
 par(mar=c(1,1,1,1)) #set margins for plots
 hist(residuals(EXP2.resp.aov.mod)) #plot histogram of residuals
-shapiro.test(residuals(EXP2.resp.aov.mod)) # residuals are normal
 boxplot(residuals(EXP2.resp.aov.mod)) #plot boxplot of residuals
 plot(fitted(EXP2.resp.aov.mod),residuals(EXP2.resp.aov.mod)) 
+qqnorm(residuals(EXP2.resp.aov.mod)) # qqplot
+
+# trend to days 2 -6 for resp rate
+#summary table based on the anova results of a significant effect of initial treatment
+EXP2_sumRESP_means <- summarySE(resp_EXP2_2.4.6., 
+                                     measurevar="FINALresp", 
+                                     groupvars=c("Day")) # summarize previous table for overall Treat1_Treat2 
+EXP2_sumRESP_means # view the table
+percentdiff.RESP_means <- ((EXP2_sumRESP_means[3,3] - EXP2_sumRESP_means[1,3])/EXP2_sumRESP_means[1,3])*100 # calculate percent difference
+percentdiff.RESP_means # 31.19829% increase in resp rate from day 2 to day 6 during secondary exposure
+
 
 # t-test for differences at the end of exp1 (day 10) and start of exp 2 (day 0) by treatment
 exp1_d10.resp  <- subset(resp_EXP1, Date=="20180724") #  resp  on Day 10 in Exp 1
@@ -789,14 +907,8 @@ t.test(exp2_d0.resp$FINALresp~exp2_d0.resp$Init.treat) # p-value = 0.01469; t-te
 #ADD MODEL RESULTS TO THE PLOT
 Exp2.Fig.resp_FINAL <- 
                     Exp2.Fig.resp.B + 
-                    geom_segment(aes(x = 1.6, y = 0.55, xend = 2.4, yend = 0.55)) +
-                    geom_segment(aes(x = 2.6, y = 0.55, xend = 3.4, yend = 0.55)) + 
-                    geom_segment(aes(x = 3.6, y = 0.55, xend = 4.4, yend = 0.55)) +
                     geom_segment(aes(x = .6, y = 0.55, xend = 1.4, yend = 0.55)) +
-                    annotate("text", x="0", y=0.54, label = "**", size = 4) + # t-test with p < 0.05 between treatments at day 0
-                    annotate("text", x="2", y=0.54, label = "*a", size = 4) + # add text to the graphic for posthoc letters - effect of time
-                    annotate("text", x="4", y=0.54, label = "*ab", size = 4) + # add text to the graphic for posthoc letters - effect of time
-                    annotate("text", x="6", y=0.54, label = "*b", size = 4) # add text to the graphic for posthoc letters - effect of time
+                    annotate("text", x="0", y=0.54, label = "**", size = 4) # t-test with p < 0.05 between treatments at day 0
 Exp2.Fig.resp_FINAL
 
 # TEST FOR EFFECTS OF THE FOUR TREATMENT GROUPS  FOR ALL DAYS
@@ -822,9 +934,8 @@ summary(Resp_alldays_EXP2) # ALL days no difference between treatments
 
 #Load Size Data
 size<-read.csv("Data/All_growth_data.csv", header=T, sep=",", na.string="NA", as.is=T) 
-
 size <- tibble::rowid_to_column(size, "ID") # add unique rownumber column to ID animals
-# CREATE DATASETS FOR EXPOSURES 1 AND 2
+# DATASETS FOR EXPOSURES 1 AND 2
 size_EXP1_with_PreExposure <- subset(size, Exp.Num=="Exp1") # all Exp1 data
 size_EXP1 <- subset(size_EXP1_with_PreExposure, trial!="prebasal") # Exp1 without Day 0
 
@@ -883,22 +994,39 @@ Exp1.Fig.size.B <- Exp1.Fig.size.A +
 Exp1.Fig.size.B # view the plot
 
 # Two-Way anova for shell size under Initial OA Exposure
+hist(size_EXP1$shell_size) # view histogram - has negative skew
+shapiro.test(size_EXP1$shell_size) # not normally distributed
+# reflect sqr root transformation to minimize negative skew
+max(size_EXP1$shell_size) # max value = 6.859
+EXP1.size.sqrt <- sqrt((6.859 + 1) - size_EXP1$shell_size) # reflect and square root (reflect = [(max value + 1) - x]
+hist(EXP1.size.sqrt) # seems to have solved the skewness in historgram
+shapiro.test(EXP1.size.sqrt) # normally distributed
+# run the model with transformed data
 EXP1.size.aov.mod <- aov(shell_size ~ Init.Trt * Day, data = size_EXP1) # run anova on treatment and time
 anova(EXP1.size.aov.mod) # significant effect of time; no effect from treatment
 # Levene's test for homogeneity 
 leveneTest(EXP1.size.aov.mod) # p 0.5609
 # post-hoc
-exp1.size.ph <- lsmeans(EXP1.size.aov.mod, pairwise ~  Day)# pariwise Tukey Post-hoc test between repeated treatments
-exp1.size.ph # view post hoc summary
-
+TukeyHSD(EXP1.size.aov.mod, "Day") # quick method
+exp1.size.ph <- lsmeans(EXP1.size.aov.mod, pairwise ~  Init.Trt * Day) # pariwise Tukey Post-hoc test
+exp1.size.ph # view post hoc summary diff between days 10 and 2
 E1.pairs.SIZE.05 <- cld(exp1.size.ph, alpha=.05, Letters=letters) #list pairwise tests and letter display p < 0.05
 E1.pairs.SIZE.05 #view results
+# what is the percent change between days 2 and day 10 (since there is no diff between treatment - group all as a mean)
+EXP1_size_Day2 <- size_EXP1 %>% filter(size_EXP1$Day==2) #dataset for day 2
+EXP1_size_Day10 <- size_EXP1 %>% filter(size_EXP1$Day==10) # dataset for day 10
+Days_2_and_10 <- rbind(EXP1_size_Day2, EXP1_size_Day10) # rbind both datasets
+# table for mean shell length days 2 and 10
+EXP1_size_table <- aggregate(Days_2_and_10$shell_size, list(Days_2_and_10$Day), mean)
+EXP1_percentdiff_size <- (((EXP1_size_table[1,2])-(EXP1_size_table[2,2]))/(EXP1_size_table[2,2]))*100 # 3.6 % increase in shell length days 2 - 10
 # plot the residuals
 par(mfrow=c(1,3)) #set plotting configuration
 par(mar=c(1,1,1,1)) #set margins for plots
 hist(residuals(EXP1.size.aov.mod)) #plot histogram of residuals
 boxplot(residuals(EXP1.size.aov.mod)) #plot boxplot of residuals
 plot(fitted(EXP1.size.aov.mod),residuals(EXP1.size.aov.mod)) 
+qqnorm(residuals(EXP1.size.aov.mod)) # qqplot
+
 
 Exp1.Fig.size_FINAL <- 
   Exp1.Fig.size.B +
@@ -950,18 +1078,29 @@ exp2_d0.size <- subset(size_EXP2, Date=="20180807") # starting size on Day 0 in 
 t.test(exp2_d0.size$shell_size~exp2_d0.size$Init.Trt) # p-value = 0.2531; t-test shows significant difference between treatment at the start of Exp2
 
 # Three-Way anova for shell size under Secondary OA Exposure
+boxplot(size_EXP2.0$shell_size)
+hist(size_EXP2.0$shell_size) # weak negative skew
+shapiro.test(size_EXP2.0$shell_size) # not normally distributed
+max(size_EXP2.0$shell_size) # max value = 7.764
+EXP2.size.sqrt <- log((7.764 + 1) - size_EXP2.0$shell_size) # reflect and square root transform
+hist(EXP2.size.sqrt) # view histogram of transformation 
+shapiro.test(EXP2.size.sqrt) # even more non normal
 EXP2.size.aov.mod <- aov(shell_size ~ Init.Trt*Sec.Trt* Day, data = size_EXP2.0) # run anova on treatment and time
 anova(EXP2.size.aov.mod) # significant effect fromboth inital and secondary treatment
 # Levene's test for homogeneity 
 leveneTest(EXP2.size.aov.mod) # p 0.8418
+# shapiro test (model residuals)
+shapiro.test(residuals(EXP2.size.aov.mod))
 # plot the residuals
 par(mfrow=c(1,3)) #set plotting configuration
 par(mar=c(1,1,1,1)) #set margins for plots
 hist(residuals(EXP2.size.aov.mod)) #plot histogram of residuals
 boxplot(residuals(EXP2.size.aov.mod)) #plot boxplot of residuals
 plot(fitted(EXP2.size.aov.mod),residuals(EXP2.size.aov.mod))
+qqnorm(residuals(EXP2.size.aov.mod)) # qqplot
+
 # post-hoc
-exp2.size.ph <- lsmeans(EXP2.size.aov.mod, pairwise ~  Init.Trt*Sec.Trt* Day)# pariwise Tukey Post-hoc test between repeated treatments
+exp2.size.ph <- lsmeans(EXP2.size.aov.mod, pairwise ~  Init.Trt*Sec.Trt*Day)# pariwise Tukey Post-hoc test between repeated treatments
 exp2.size.ph # view post hoc summary
 E2.pairs.SIZE.05 <- cld(exp2.size.ph, alpha=.05, Letters=letters) #list pairwise tests and letter display p < 0.05
 E2.pairs.SIZE.05 #view results
@@ -1011,10 +1150,18 @@ anova(size_157days_postEXP.aov.mod) # significant effect of initial treatment
 # plot the residuals and test with levene's test
 par(mfrow=c(1,3)) #set plotting configuration
 par(mar=c(1,1,1,1)) #set margins for plots
+# Levene's test 
 leveneTest(size_157days_postEXP.aov.mod) # p = 0.4317
+# post-hoc
+size_157days.size <- lsmeans(size_157days_postEXP.aov.mod, pairwise ~  Init_treat*Sec_treat)# pariwise Tukey Post-hoc test between repeated treatments
+size_157days.size # view post hoc summary
+size157days.pairs.SIZE.05 <- cld(size_157days.size, alpha=.05, Letters=letters) #list pairwise tests and letter display p < 0.05
+size157days.pairs.SIZE.05 #view results
+# hist qq residual diagnostic
 hist(residuals(size_157days_postEXP.aov.mod)) #plot histogram of residuals
 boxplot(residuals(size_157days_postEXP.aov.mod)) #plot boxplot of residuals
 plot(fitted(size_157days_postEXP.aov.mod),residuals(size_157days_postEXP.aov.mod))
+qqnorm(residuals(size_157days_postEXP.aov.mod)) # qqplot
 
 #summary table based on the anova results of a significant effect of initial treatment
 sumLENGTH_means.157days <- summarySE(size_157days_postEXP, 
@@ -1146,21 +1293,31 @@ JUVresp_table_treatments_SECONDARY<- JUVresp_geoduck %>%
 JUVresp_table_treatments_SECONDARY # view table
 
 # run the two way anova 
-JUVresp.mod  <- aov(Resp_rate_ug.mol~Treat.initial*Treat.Secondary*Treatment, data = JUVresp_geoduck)
+JUVresp.mod  <- aov(Resp_rate_ug.mol~Treat.initial*Treat.Secondary, data = JUVresp_geoduck)
 anova(JUVresp.mod) # anova results
 par(mfrow=c(1,3)) #set plotting configuration
 par(mar=c(1,1,1,1)) #set margins for plots
-leveneTest(JUVresp.mod) # p = 0.9491
+# Levene's test
+leveneTest(JUVresp.mod) # p = 0.5534
+# pairwise post hoc
+# post-hoc
+resp_157days.size <- lsmeans(JUVresp.mod, pairwise ~  Treat.initial*Treat.Secondary)# pariwise Tukey Post-hoc test between repeated treatments
+resp_157days.size # view post hoc summary
+resp157days.pairs.SIZE.05 <- cld(size_157days.size, alpha=.05, Letters=letters) #list pairwise tests and letter display p < 0.05
+resp157days.pairs.SIZE.05 #view results
+# hist and qq residual diagnostics
 hist(residuals(JUVresp.mod)) #plot histogram of residuals
 boxplot(residuals(JUVresp.mod)) #plot boxplot of residuals
 plot(fitted(JUVresp.mod),residuals(JUVresp.mod))
+qqnorm(residuals(JUVresp.mod)) # qqplot
+
 library(Rmisc)
 sum_JUVresp_means <- summarySE(JUVresp_geoduck, 
                                measurevar="Resp_rate_ug.mol", 
                                groupvars=c("Treat.Secondary")) # summarize previous table for overall treatment 
 sum_JUVresp_means # view the table
 percentdiff.JUVresp <- ((sum_JUVresp_means[2,3] - sum_JUVresp_means[1,3])/sum_JUVresp_means[2,3])*100 # calculate percent difference
-percentdiff.JUVresp # 53.08305% greater respiration rate from animals under secondary exposure to elevated conditions
+percentdiff.JUVresp # 52.37839% greater respiration rate from animals under secondary exposure to elevated conditions
 
 
 # significant effect graph
@@ -1199,12 +1356,10 @@ JUVresp_geoduck_INITIAL.SECOND.157days <- ggplot(JUVresp_geoduck, aes(x = factor
   labs(y=expression("Respiration rate"~(~µg~O[2]*hr^{-1}*mm^{-1})),  x = "Initial×Secondary treatment", fill= "") 
 JUVresp_geoduck_INITIAL.SECOND.157days # view the graph
 
-figure_supplementary_157d <- ggarrange(size_graph_INITIAL.157days, 
-                                       size_graph_INITIAL.SECOND.157days,
-                                       JUVresp_geoduck_INITIAL.157days,
+figure_supplementary_157d <- ggarrange(size_graph_INITIAL.SECOND.157days,
                                        JUVresp_geoduck_INITIAL.SECOND.157days,
-                                       ncol = 2, nrow = 2)
+                                       ncol = 1, nrow = 2)
 figure_supplementary_157d # view the figure
 
 # Saving output plots
-ggsave(file="Output/Fig.resp.size.157d.post.pdf", figure_supplementary_157d, width = 14, height = 8, units = c("in"))
+ggsave(file="Output/Fig.4.resp.size.157d.post.pdf", figure_supplementary_157d, width = 14, height = 8, units = c("in"))
