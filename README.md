@@ -9,9 +9,6 @@ Authors:
 
 Samuel J. Gurr*, Brent Vadopalas, Steven B. Roberts, Hollie M. Putnam
 
-SJG, HMP - University of Rhode Island, College of the Environment and Life Sciences, 120 Flagg Rd, Kingston, RI 02881 USA
-
-BV, SBR - University of Washington, School of Aquatic and Fishery Science, 1122 NE Boat St, Seattle, WA 9810 USA
 *Corresponding author: Fax: Phone:1-401-874-9510 Email: samuel_gurr@uri.edu
 
 Abstract:
