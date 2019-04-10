@@ -4,7 +4,7 @@
 
 Physiology: All phyiological measurements (metabolic rates and growth) 
 
-Chemistry: Daily and continous chemistry data from hand held probes, titrations, and continuous data log probes
+Chemistry: Daily and continuous chemistry data from hand held probes, titrations, and continuous data log probes
 
 ## Output
 
