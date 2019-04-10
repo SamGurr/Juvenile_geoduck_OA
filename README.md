@@ -1,4 +1,4 @@
-# Juvenile_geoduck_OA_2018
+# Juvenile_geoduck_OA
 This repository contains all data and analysis for the prepared manuscript (title, authors, and abstract below)
 and is condensed from the work repository "https://github.com/hputnam/Geoduck_Conditioning"
 
