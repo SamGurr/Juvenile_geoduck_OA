@@ -13,4 +13,4 @@ All figures and tables output from Stats_all.R
 ## Scripts
 
 Stats_all.R contains a condensed analysis commented throughout for chemistry tables, flow rates, 
-metabolic rate (step by step Lolin R. process), and shell growth data. Analyzes and plots data  for paper figures and tables.  
+metabolic rate (step by step Lolin R. process), and shell growth data. Analyzes and plots data  for figures and tables.  
