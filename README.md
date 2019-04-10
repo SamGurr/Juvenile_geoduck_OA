@@ -1,4 +1,4 @@
-# Read.me - Manuscript information
+# Manuscript information
 This repository contains all data and analysis for the prepared manuscript (title, authors, and abstract below)
 and is condensed from the work repository "https://github.com/hputnam/Geoduck_Conditioning"
 
