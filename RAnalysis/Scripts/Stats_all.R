@@ -1,9 +1,8 @@
 #Title: Juvenile Repeat Exposure Experiment 2018
 #Project: FFAR
 #Author: HM Putnam & Sam Gurr
-#Edite
-#20180801_Apex_Data_Output.csvd by: Sam Gurr
-#Date Last Modified: 20190407
+#Edit by: Sam Gurr
+#Date Last Modified: 20190409
 #See Readme file for details
 
 rm(list=ls())
@@ -20,8 +19,8 @@ if ("lsmeans" %in% rownames(installed.packages()) == 'FALSE') install.packages('
 if ("gridExtra" %in% rownames(installed.packages()) == 'FALSE') install.packages('gridExtra') 
 if ("reshape" %in% rownames(installed.packages()) == 'FALSE') install.packages('reshape') 
 if ("multcompView" %in% rownames(installed.packages()) == 'FALSE') install.packages('multcompView') 
-if ("tidyr" %in% rownames(installed.packages()) == 'FALSE') install.packages('tidyr') 
-if ("Rcmdr" %in% rownames(installed.packages()) == 'FALSE') install.packages('Rcmdr') 
+#if ("tidyr" %in% rownames(installed.packages()) == 'FALSE') install.packages('tidyr') 
+#if ("Rcmdr" %in% rownames(installed.packages()) == 'FALSE') install.packages('Rcmdr') 
 
 # Load packages and pacage version/date/import/depends info
 library(dplyr)          # Version 0.7.6, Packaged: 2018-06-27, Depends: R (>= 3.1.2)Imports: assertthat (>= 0.2.0), bindrcpp (>= 0.2.0.9000), glue (>=1.1.1), magrittr (>= 1.5), methods, pkgconfig (>= 2.0.1), R6(>= 2.2.2), Rcpp (>= 0.12.15), rlang (>= 0.2.0), tibble (>=1.3.1), tidyselect (>= 0.2.3), utils
@@ -36,8 +35,8 @@ library(lsmeans)        # Version: 2.27-62, Date/Publication: 2018-05-11, Depend
 library(gridExtra)      # Version: 2.3, Date/Publication: 2017-09-09, Imports: gtable, grid, grDevices, graphics, utils
 library(reshape)        # Version: 0.8.7, Date/Publication: 2017-08-06, Depends: R (>= 2.6.1) Imports: plyr
 library(multcompView)   # Version: 0.1-7, Date/Publication: 2015-07-31, Imports: grid
-library(tidyr)          # Version: 0.8.1, Date/Publication: 2018-05-18, Depends: R (>= 3.1) Imports: dplyr (>= 0.7.0), glue, magrittr, purrr, Rcpp, rlang, stringi, tibble, tidyselect
-library(Rcmdr)          # Version: 2.5-1. Date/Publication: 2018-09-11, Depends: R (>= 3.5.0), grDevices, graphics, methods, stats, utils,splines, RcmdrMisc (>= 2.5-0), car (>= 3.0-1), effects (>=4.0-3) Imports: tcltk, tcltk2 (>= 1.2-6), abind, relimp (>= 1.0-5)
+#library(tidyr)          # Version: 0.8.1, Date/Publication: 2018-05-18, Depends: R (>= 3.1) Imports: dplyr (>= 0.7.0), glue, magrittr, purrr, Rcpp, rlang, stringi, tibble, tidyselect
+#library(Rcmdr)          # Version: 2.5-1. Date/Publication: 2018-09-11, Depends: R (>= 3.5.0), grDevices, graphics, methods, stats, utils,splines, RcmdrMisc (>= 2.5-0), car (>= 3.0-1), effects (>=4.0-3) Imports: tcltk, tcltk2 (>= 1.2-6), abind, relimp (>= 1.0-5)
 library(Rmisc)
 #Required Data files
 # ----Conical Chemistry (APEX data)
@@ -45,14 +44,14 @@ library(Rmisc)
 #20180805_Apex_Data_Output.csv
 #20180814_Apex_Data_Output.csv
 # ----Heath Tray Chemistry (discrete probe data)
-#Flow_rates.csv
+#Flow.rates.csv
 #pH_Calibration_Files (tris data)
-#Seawater_chemistry_table_Output_All.csv
+#Daily_Temp_pH_Sal.csv
 # ----Respiration data
-#PreExposure_resp_calc_and_standardized.csv
-#All_resp_calc_and_standardized.csv
+#Resp.pre.Exposure.csv
+#Resp.30d.Exposure.csv
 # ----Shell size data
-#All_growth_data.csv
+#Length.30d.Exposure.csv
 
 #set working directory--------------------------------------------------------------------------------------------------
 setwd("C:/Users/samjg/Documents/My_Projects/Juvenile_geoduck_OA/RAnalysis/") #set working
@@ -61,10 +60,10 @@ setwd("C:/Users/samjg/Documents/My_Projects/Juvenile_geoduck_OA/RAnalysis/") #se
 
 #CONTINUOUS EXPERIMENTAL APEX DATA 
 #Load Apex Data 
-APEX_1<-read.csv("Data/Apex_data/20180724_Apex_Data_Output.csv", header=T, sep=",", na.string="NA", as.is=T) 
-APEX_2<-read.csv("Data/Apex_data/20180801_Apex_Data_Output.csv", header=T, sep=",", na.string="NA", as.is=T) 
-APEX_3<-read.csv("Data/Apex_data/20180805_Apex_Data_Output.csv", header=T, sep=",", na.string="NA", as.is=T) 
-APEX_4<-read.csv("Data/Apex_data/20180814_Apex_Data_Output.csv", header=T, sep=",", na.string="NA", as.is=T) 
+APEX_1<-read.csv("Data/Chemistry.flow/Apex_data/20180724_Apex_Data_Output.csv", header=T, sep=",", na.string="NA", as.is=T) 
+APEX_2<-read.csv("Data/Chemistry.flow/Apex_data/20180801_Apex_Data_Output.csv", header=T, sep=",", na.string="NA", as.is=T) 
+APEX_3<-read.csv("Data/Chemistry.flow/Apex_data/20180805_Apex_Data_Output.csv", header=T, sep=",", na.string="NA", as.is=T) 
+APEX_4<-read.csv("Data/Chemistry.flow/Apex_data/20180814_Apex_Data_Output.csv", header=T, sep=",", na.string="NA", as.is=T) 
 APEX_data<- do.call("rbind", list(APEX_1, APEX_2, APEX_3, APEX_4)) # bind all data together
 APEX_data$Date.Time <-as.POSIXct(APEX_data$Date.Time, format="%Y-%m-%d %H:%M:%S") #convert date format
 
@@ -195,9 +194,7 @@ CommGarden.pH.Apex.FIG <- ggplot(APEX.pH.commongarden, aes(x=datehour, y=mean, g
                                   legend.key = element_blank(), #remove the legend background
                                   legend.title = element_text(size=8, face="bold")) #Justify the title to the top left
 CommGarden.pH.Apex.FIG <- CommGarden.pH.Apex.FIG + scale_color_manual(values=c("#009E73", "#0072B2", "#E69F00", "#D55E00")) #colorblindess color theme
-
-#CommGarden.pH.Apex.FIG <- CommGarden.pH.Apex.FIG + scale_x_continuous(breaks=number_ticks(10))
-
+CommGarden.pH.Apex.FIG # view the plot
 
 APEX.pH.Exp2$datehour <- as.POSIXct(APEX.pH.Exp2$datehour, format="%Y-%m-%d %H:%M:%S")#format datehour 
 Exp2.pH.Apex.FIG <- ggplot(APEX.pH.Exp2, aes(x=datehour, y=mean, group=Treatment, color=Treatment)) +#Plot average diurnal cycle of temperature data
@@ -229,7 +226,7 @@ Exp2.pH.Apex.FIG <- Exp2.pH.Apex.FIG + scale_color_manual(values=c("#009E73", "#
 Exp2.pH.Apex.FIG #view graph
 
 
-## Temp tables and graTemps for all exposures
+## Temp tables and graphs 
 Temp.low_t0 <- do.call(data.frame,aggregate(TMP_T0 ~ datehour + days, data = APEX_data, function(x) c(mean = mean(x), se = std.error(x)))) #calculate mean and sem of each treatment by Hour
 Temp.low_t3 <- do.call(data.frame,aggregate(Temp_T3 ~ datehour + days, data = APEX_data, function(x) c(mean = mean(x), se = std.error(x)))) #calculate mean and sem of each treatment by Hour
 Temp.amb_t1 <- do.call(data.frame,aggregate(TMP_T1 ~ datehour + days, data = APEX_data, function(x) c(mean = mean(x), se = std.error(x)))) #calculate mean and sem of each treatment by Hour
@@ -318,12 +315,6 @@ CommGarden.Temp.Apex.FIG <- ggplot(APEX.Temp.commongarden, aes(x=datehour, y=mea
 CommGarden.Temp.Apex.FIG   <- CommGarden.Temp.Apex.FIG   + scale_color_manual(values=c("#009E73", "#0072B2", "#E69F00", "#D55E00")) #colorblindess color theme
 CommGarden.Temp.Apex.FIG   #view graph
 
-CommGarden.Temp.Apex.FIG + scale_x_discrete(limits=c("2018-08-07 08:00:00 PDT"))
-
-
-CommGarden.Temp.Apex.FIG +  scale_x_date(labels = date_format("%m-%d"))
-
-
 APEX.Temp.Exp2$datehour <- as.POSIXct(APEX.Temp.Exp2$datehour, format="%Y-%m-%d %H:%M:%S")#format datehour 
 Exp2.Temp.Apex.FIG <- ggplot(APEX.Temp.Exp2, aes(x=datehour, y=mean, group=Treatment, color=Treatment)) +#Plot average diurnal cycle of temperature data
                       #geom_line() +
@@ -353,15 +344,15 @@ Exp2.Temp.Apex.FIG <- ggplot(APEX.Temp.Exp2, aes(x=datehour, y=mean, group=Treat
 Exp2.Temp.Apex.FIG   <- Exp2.Temp.Apex.FIG   + scale_color_manual(values=c("#009E73", "#0072B2", "#E69F00", "#D55E00")) #colorblindess color theme
 Exp2.Temp.Apex.FIG   #view graph
 
-Supplem.Fig.conical.pH.temp <- grid.arrange(arrangeGrob(Exp1.pH.Apex.FIG, CommGarden.pH.Apex.FIG, Exp2.pH.Apex.FIG, left="Conical pH", ncol=3), 
+Supplem.Fig.conical.pH.temp <- grid.arrange(arrangeGrob(Exp1.pH.Apex.FIG, CommGarden.pH.Apex.FIG, Exp2.pH.Apex.FIG, left="pH", ncol=3), 
                                             arrangeGrob(Exp1.Temp.Apex.FIG, CommGarden.Temp.Apex.FIG, Exp2.Temp.Apex.FIG, 
-                                                        left="Conical Temperature", ncol=3), ncol=1)
+                                                        left="Temperature", ncol=3), ncol=1)
 
 ###  HEATH TRAY Flow rate data ##################################################################
 # NOTE: heath tray pairs were gravity-fed SW from conical overflow (1 conical to every heath tray pair)
-# conicals were set to 1 LPM and teed with PVC to target 500 LPM in each heath tray
+# conicals were set to 1 LPM to target ~500 mLPM for each tray
 
-flow<-read.csv("Data/Flow_rates.csv", header=T, sep=",", na.string="NA", as.is=T) #upload file
+flow<-read.csv("Data/Chemistry.flow/Flow.rates.csv", header=T, sep=",", na.string="NA", as.is=T) #upload file
 flow # view the data
 
 flow_summary <-flow %>% 
@@ -401,7 +392,7 @@ flow_EXP_1_2.treat # view summary table
 
 #pH Tris Calibration Curves
 #Data to calculate conversion equations from mV to total scale using tris standard for pH probe
-path.tris <-("Data/pH_Calibration_Files") #set path to calibration file folder
+path.tris <-("Data/Chemistry.flow/pH_Calibration_Files") #set path to calibration file folder
 file.names.tris<-list.files(path = path.tris, pattern = "csv$") #list all the file names with csv 
 pH.cals <- data.frame(matrix(NA, nrow=length(file.names.tris), ncol=4, dimnames=list(file.names.tris,c("Date", "Intercept", "Slope","R2")))) #generate an empty 3 column dataframe with specific column names
 
@@ -416,11 +407,11 @@ for(i in 1:length(file.names.tris)) { # for every file in list start at the firs
 }
 
 colnames(pH.cals) <- c("Calib.Date",  "Intercept",  "Slope", "R2") #names the columns of the dataframe
-pH.cals #view data
+pH.cals #view data - R2 shows linear strength >0.98 for pH calibration
 
 
 #call cumulative spreadsheet of discrete seawater chemistry
-chem<-read.csv("Data/Seawater_chemistry_table_Output_All.csv", header=T, sep=",", na.string="NA", as.is=T) 
+chem<-read.csv("Data/Chemistry.flow/Daily_Temp_pH_Sal.csv", header=T, sep=",", na.string="NA", as.is=T) 
 chem # view the file
 chem.exp <-subset(chem, Treatment!="na") #remove na - na often set as the treatment for samples of the sump
 
@@ -588,7 +579,7 @@ hist(TA2.trt$residuals) #plot histogram of residuals
 boxplot(TA2.trt$residuals) #plot boxplot of residuals
 plot(TA2.trt) #display residuals versus fitter, normal QQ plot, leverage plot
 
-#Calculate descriptive stats by Tank
+#Calculate descriptive stats by Tray
 SWC.Tanks <- ddply(chem.long, c("Exposure", "tank.name", "variable"), summarise, #apply functions to sewater chem data
                    N = length(na.omit(value)), #count the sample size removing NA
                    mean = mean(value), #calculate average 
@@ -623,15 +614,15 @@ ALL.Exposure.long <- reshape(SWC.Treatments.all, idvar="Treatment", direction="w
 CommGard.chem <- reshape(SWC.common.garden, idvar="Treatment", direction="wide", timevar = "variable", drop = c("Exposure", "N"))
 
 # write out tables
-write.table (Exposure1.long, file="C:/Users/samjg/Documents/My_Projects/Juvenile_geoduck_OA_2018/RAnalysis/Output/Seawater_chemistry_table_Output_exposure1.csv", sep=",", row.names = FALSE) #save data to output file
-write.table (Exposure2.long, file="C:/Users/samjg/Documents/My_Projects/Juvenile_geoduck_OA_2018/RAnalysis/Output/Seawater_chemistry_table_Output_exposure2.csv", sep=",", row.names = FALSE) #save data to output file
-write.table (ALL.Exposure.long, file="C:/Users/samjg/Documents/My_Projects/Juvenile_geoduck_OA_2018/RAnalysis/Output/Seawater_chemistry_table_Output_exposure_1_2.csv", sep=",", row.names = FALSE) #save data to output file
-write.table (CommGard.chem, file="C:/Users/samjg/Documents/My_Projects/Juvenile_geoduck_OA_2018/RAnalysis/Output/Seawater_chemistry_table_common_garden.csv", sep=",", row.names = FALSE) #save data to output file
+write.table (Exposure1.long, file="C:/Users/samjg/Documents/My_Projects/Juvenile_geoduck_OA/RAnalysis/Output/TABLE.Chem.initial.10d.exposure.csv", sep=",", row.names = FALSE) #save data to output file
+write.table (Exposure2.long, file="C:/Users/samjg/Documents/My_Projects/Juvenile_geoduck_OA/RAnalysis/Output/TABLE.Chem.secondary.6d.exposure.csv", sep=",", row.names = FALSE) #save data to output file
+write.table (ALL.Exposure.long, file="C:/Users/samjg/Documents/My_Projects/Juvenile_geoduck_OA/RAnalysis/Output/TABLE.Chem.both.exposures.csv", sep=",", row.names = FALSE) #save data to output file
+write.table (CommGard.chem, file="C:/Users/samjg/Documents/My_Projects/Juvenile_geoduck_OA/RAnalysis/Output/TABLE.Chem.common.garden.csv", sep=",", row.names = FALSE) #save data to output file
 
 ### Respiration Data - Analysis, Graphs, Models  (summarized analysis from Stats_resp_analysis.R)#############
 
 #Load PreExposure Respiraiton Data before the exposures ("Day 0") 
-respPreExposure<-read.csv("Data/PreExposure_resp_calc_and_standardized.csv", header=T, sep=",", na.string="NA", as.is=T) 
+respPreExposure<-read.csv("Data/Metabolic.Rates/Resp.pre.Exposure.csv", header=T, sep=",", na.string="NA", as.is=T) 
 names(respPreExposure) # view the names of the data
 
 # plot the PreExposure respiration rate 
@@ -648,7 +639,7 @@ print(resp_PreExposure_plot + labs(y="Respiration rate rate µg O2 L-1 h-1 indiv-
         ggtitle("Juvenile geoduck respirometry \ PreExposure"))
 
 #Load Respiraiton Data for exposure 1 and 2
-resp<-read.csv("Data/All_resp_calc_and_standardized.csv", header=T, sep=",", na.string="NA", as.is=T) 
+resp<-read.csv("Data/Metabolic.Rates/Resp.30d.Exposure.csv", header=T, sep=",", na.string="NA", as.is=T) 
 names(resp) # view  names in the dataframe 
 
 # seperate into experiment 1 and 2 for the 10-day and 6-day OA exposure
@@ -755,6 +746,9 @@ EXP1.resp.aov.mod <- aov(FINALresp ~ Init.treat * Day, data = resp_EXP1) # run a
 anova(EXP1.resp.aov.mod) # significant effect of  treatment 
 # Levene's test for homogeneity 
 leveneTest(EXP1.resp.aov.mod) # p 0.2236
+# Shapiro test
+EXP1.resp.mod.residuals <- residuals(object = EXP1.resp.aov.mod) # call residuals from the model
+shapiro.test(x = EXP1.resp.mod.residuals) #  0.09055
 # post-hoc
 exp1.resp.ph <- lsmeans(EXP1.resp.aov.mod, pairwise ~  Init.treat * Day)# pariwise Tukey Post-hoc test between repeated treatments
 exp1.resp.ph # view post hoc summary
@@ -762,9 +756,6 @@ E1.pairs.RESP.05 <- cld(exp1.resp.ph, alpha=.05, Letters=letters) #list pairwise
 E1.pairs.RESP.05 #view results
 E1.pairs.RESP.1 <- cld(exp1.resp.ph, alpha=.1, Letters=letters) #list pairwise tests and letter display p < 0.1
 E1.pairs.RESP.1 #view results
-# Shapiro test
-EXP1.resp.mod.residuals <- residuals(object = EXP1.resp.aov.mod) # call residuals from the model
-shapiro.test(x = EXP1.resp.mod.residuals) #  0.09055
 # plot the residuals
 par(mfrow=c(1,3)) #set plotting configuration
 par(mar=c(1,1,1,1)) #set margins for plots
@@ -939,7 +930,7 @@ summary(Resp_alldays_EXP2) # ALL days no difference between treatments
 ### Growth Data - Analysis, Graphs, Models  (summarized analysis from Stats_growth_analysis.R)#######################################
 
 #Load Size Data
-size<-read.csv("Data/All_growth_data.csv", header=T, sep=",", na.string="NA", as.is=T) 
+size<-read.csv("Data/Shell.Length/Length.30d.Exposure.csv", header=T, sep=",", na.string="NA", as.is=T) 
 size <- tibble::rowid_to_column(size, "ID") # add unique rownumber column to ID animals
 # DATASETS FOR EXPOSURES 1 AND 2
 size_EXP1_with_PreExposure <- subset(size, Exp.Num=="Exp1") # all Exp1 data
@@ -1140,7 +1131,7 @@ ggsave(file="Output/Output_Figure_3.pdf", figure_3, width = 12, height = 8, unit
 # 157 days post experiment in common garden heathstack
 
 # Shell Size
-size_157days_postEXP<-read.csv("Data/Data_157days_post_experiment/Shell_size/Shell_size_157days_post.csv", header=T, sep=",", na.string="NA", as.is=T) 
+size_157days_postEXP<-read.csv("Data/Shell.Length/Length.157d.post.csv", header=T, sep=",", na.string="NA", as.is=T) 
 size_157days_postEXP <- na.omit(size_157days_postEXP)
 size_157days_postEXP # look at the data
 names(size_157days_postEXP) # look at names of data
@@ -1216,13 +1207,13 @@ size_graph_INITIAL.SECOND.157days
 # Respiration
 # call the whole record NOTE: initial data in first 5 minutes shows higher respriration rates
 # than the rest of the record due to mixing, this leads to outliers in automated analysis
-# used a truncated 5-20 minute record to pull representative data after vials were thorougly mixed
+# used a truncated 10-20 minute record to pull representative data after vials were thorougly mixed
 # line below is the whole record
-# RESP.reference.resp157days.postEXP<-read.csv("Data/Data_157days_post_experiment/Respiration/Resp_data_157days_whole_record.csv", header=T, sep=",", na.string="NA", as.is=T) 
+# RESP.reference.resp157days.postEXP<-read.csv("Data/Metabolic.Rates/Resp.157d.post.all.csv", header=T, sep=",", na.string="NA", as.is=T) 
 
 # call the truncated 5-20 minute record
-RESP.reference.resp157days.postEXP<-read.csv("Data/Data_157days_post_experiment/Respiration/Resp_157d_post_alpha0.4_10-20mins.csv", header=T, sep=",", na.string="NA", as.is=T) 
-SIZE.reference.resp157days.postEXP<-read.csv("Data/Data_157days_post_experiment/Respiration/Size_reference_157days_post.csv", header=T, sep=",", na.string="NA", as.is=T) 
+RESP.reference.resp157days.postEXP<-read.csv("Data/Metabolic.Rates/Resp.157d.post.trunc.csv", header=T, sep=",", na.string="NA", as.is=T) 
+SIZE.reference.resp157days.postEXP<-read.csv("Data/Metabolic.Rates/Resp.157d.post.size.reference.csv", header=T, sep=",", na.string="NA", as.is=T) 
 RESP.CALC.157.days.postEXP <- merge(RESP.reference.resp157days.postEXP, SIZE.reference.resp157days.postEXP, by=c("Date","SDR_position", "RUN")) # merge the individual info (size, estimate number of larvae) by common columns 
 RESP.CALC.157.days.postEXP # view new file
 
