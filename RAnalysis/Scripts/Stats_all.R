@@ -318,6 +318,12 @@ CommGarden.Temp.Apex.FIG <- ggplot(APEX.Temp.commongarden, aes(x=datehour, y=mea
 CommGarden.Temp.Apex.FIG   <- CommGarden.Temp.Apex.FIG   + scale_color_manual(values=c("#009E73", "#0072B2", "#E69F00", "#D55E00")) #colorblindess color theme
 CommGarden.Temp.Apex.FIG   #view graph
 
+CommGarden.Temp.Apex.FIG + scale_x_discrete(limits=c("2018-08-07 08:00:00 PDT"))
+
+
+CommGarden.Temp.Apex.FIG +  scale_x_date(labels = date_format("%m-%d"))
+
+
 APEX.Temp.Exp2$datehour <- as.POSIXct(APEX.Temp.Exp2$datehour, format="%Y-%m-%d %H:%M:%S")#format datehour 
 Exp2.Temp.Apex.FIG <- ggplot(APEX.Temp.Exp2, aes(x=datehour, y=mean, group=Treatment, color=Treatment)) +#Plot average diurnal cycle of temperature data
                       #geom_line() +
@@ -1116,19 +1122,19 @@ EXP2_perc_diff_SecTrmt <- ((5.796007 - 5.610461) / (5.796007)) *100
 EXP2_perc_diff_SecTrmt
 
 # Assemble output plots
-figure_1 <- ggarrange(Exp1.Fig.resp_FINAL, Exp2.Fig.resp_FINAL,
-                      ncol = 1, nrow = 2)
-figure_1 # view the figure
-
-figure_2 <- ggarrange(Exp1.Fig.size_FINAL, Exp2.Fig.size.FINAL,
+figure_2 <- ggarrange(Exp1.Fig.resp_FINAL, Exp1.Fig.size_FINAL,
                       ncol = 1, nrow = 2)
 figure_2 # view the figure
+
+figure_3 <- ggarrange(Exp2.Fig.resp_FINAL, Exp2.Fig.size.FINAL,
+                      ncol = 1, nrow = 2)
+figure_3 # view the figure
 
 
 # Saving output plots
 ggsave(file="Output/Supplem.Fig.conical.pH.temp.pdf", Supplem.Fig.conical.pH.temp, width = 12, height = 8, units = c("in"))
-ggsave(file="Output/Output_Figure_1.pdf", figure_1, width = 12, height = 8, units = c("in"))
 ggsave(file="Output/Output_Figure_2.pdf", figure_2, width = 12, height = 8, units = c("in"))
+ggsave(file="Output/Output_Figure_3.pdf", figure_3, width = 12, height = 8, units = c("in"))
 
 
 # 157 days post experiment in common garden heathstack
