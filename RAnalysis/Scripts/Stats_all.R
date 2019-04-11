@@ -6,7 +6,7 @@
 #See Readme file for details
 
 rm(list=ls())
-## Install packages if not already in your library
+# Install packages if not already in your library
 if ("dplyr" %in% rownames(installed.packages()) == 'FALSE') install.packages('dplyr') 
 #if ("plyr" %in% rownames(installed.packages()) == 'FALSE') install.packages('plyr') 
 if ("ggplot2" %in% rownames(installed.packages()) == 'FALSE') install.packages('ggplot2') 
