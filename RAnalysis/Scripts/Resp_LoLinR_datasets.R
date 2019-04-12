@@ -1,5 +1,5 @@
 # Project: Juvenile_Geoduck_OA
-# Title: SDR_LoLinR_datasets.R
+# Title: Resp_LoLinR_datasets.R
 # Supported by: FFAR
 # Author: Sam Gurr
 # Date Updated: 20190410

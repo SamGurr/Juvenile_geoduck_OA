@@ -2,7 +2,7 @@
 #Project: FFAR
 #Author: HM Putnam & Sam Gurr
 #Edit by: Sam Gurr
-#Date Last Modified: 20190409
+#Date Last Modified: 20190411
 #See Readme file for details
 
 rm(list=ls())
@@ -225,7 +225,6 @@ Exp2.pH.Apex.FIG <- ggplot(APEX.pH.Exp2, aes(x=datehour, y=mean, group=Treatment
 Exp2.pH.Apex.FIG <- Exp2.pH.Apex.FIG + scale_color_manual(values=c("#009E73", "#0072B2", "#E69F00", "#D55E00")) #colorblindess color theme
 Exp2.pH.Apex.FIG #view graph
 
-
 ## Temp tables and graphs 
 Temp.low_t0 <- do.call(data.frame,aggregate(TMP_T0 ~ datehour + days, data = APEX_data, function(x) c(mean = mean(x), se = std.error(x)))) #calculate mean and sem of each treatment by Hour
 Temp.low_t3 <- do.call(data.frame,aggregate(Temp_T3 ~ datehour + days, data = APEX_data, function(x) c(mean = mean(x), se = std.error(x)))) #calculate mean and sem of each treatment by Hour
@@ -409,7 +408,6 @@ for(i in 1:length(file.names.tris)) { # for every file in list start at the firs
 colnames(pH.cals) <- c("Calib.Date",  "Intercept",  "Slope", "R2") #names the columns of the dataframe
 pH.cals #view data - R2 shows linear strength >0.98 for pH calibration
 
-
 #call cumulative spreadsheet of discrete seawater chemistry
 chem<-read.csv("Data/Chemistry.flow/Daily_Temp_pH_Sal.csv", header=T, sep=",", na.string="NA", as.is=T) 
 chem # view the file
@@ -496,7 +494,6 @@ plot_pCO2 <- ggplot(chem.exp_1_2, aes(x = factor(Treatment), y = pCO2, fill = Ex
                position = position_dodge(preserve = "single")) + 
   geom_point(pch = 19, position = position_jitterdodge(.05), size=1) 
 plot_pCO2 # view plot
-
 
 chem.common.garden <-chem.exp[132:156,] # common garden between exposure periods
 chem.common.garden$Exposure <- "Common_garden" 
@@ -619,14 +616,22 @@ write.table (Exposure2.long, file="C:/Users/samjg/Documents/My_Projects/Juvenile
 write.table (ALL.Exposure.long, file="C:/Users/samjg/Documents/My_Projects/Juvenile_geoduck_OA/RAnalysis/Output/TABLE.Chem.both.exposures.csv", sep=",", row.names = FALSE) #save data to output file
 write.table (CommGard.chem, file="C:/Users/samjg/Documents/My_Projects/Juvenile_geoduck_OA/RAnalysis/Output/TABLE.Chem.common.garden.csv", sep=",", row.names = FALSE) #save data to output file
 
-### Respiration Data - Analysis, Graphs, Models  (summarized analysis from Stats_resp_analysis.R)#############
+########################
+# RESPIRATION DATA #####
+# - Analysis, Graphs, Models  (summarized analysis from Stats_growth_analysis.R)
 
 #Load PreExposure Respiraiton Data before the exposures ("Day 0") 
 respPreExposure<-read.csv("Data/Metabolic.Rates/Resp.pre.Exposure.csv", header=T, sep=",", na.string="NA", as.is=T) 
-names(respPreExposure) # view the names of the data
+# load 30d exposure data
+resp<-read.csv("Data/Metabolic.Rates/Resp.30d.Exposure.csv", header=T, sep=",", na.string="NA", as.is=T) 
+# seperate into experiment 1 and 2 for the 10-day and 6-day OA exposure
+resp_EXP1 <- subset(resp, EXP.numb=="EXP1") #initial 10-day trial, subset entire dataset resp by column nsame "Exp.num" == Exp1
+resp_EXP2 <- subset(resp, EXP.numb=="EXP2") #second 6-day trial, subset entire dataset resp by column nsame "Exp.num" == Exp2
+resp_EXP2.0 <- subset(resp, EXP.numb=="EXP2") # same under a diff name (read why on next comment)
+resp_EXP2.0 <-subset(resp_EXP2.0, Day!=0) # omit Day0 of the second exposure for graph on cumulative exposure to OA 
 
+par(mfrow=c(1,1)) #reset plot margins
 # plot the PreExposure respiration rate 
-par(mfrow=c(1,1)) #reset plot output
 resp_PreExposure_plot <- ggplot(respPreExposure, aes(x = factor(respPreExposure$Date), y = respPreExposure$LpcResp_alpha0.4_all)) +
   geom_boxplot(alpha = 0.1) +
   geom_point(size = 2, shape = 21) +
@@ -638,102 +643,35 @@ print(resp_PreExposure_plot + labs(y="Respiration rate rate µg O2 L-1 h-1 indiv-
                                    x = "Date") + 
         ggtitle("Juvenile geoduck respirometry \ PreExposure"))
 
-#Load Respiraiton Data for exposure 1 and 2
-resp<-read.csv("Data/Metabolic.Rates/Resp.30d.Exposure.csv", header=T, sep=",", na.string="NA", as.is=T) 
-names(resp) # view  names in the dataframe 
+# RESPIRATION RATES Initial Exposure ----------------------------------------------------------------------------
 
-# seperate into experiment 1 and 2 for the 10-day and 6-day OA exposure
-resp_EXP1 <- subset(resp, EXP.numb=="EXP1") #initial 10-day trial, subset entire dataset resp by column nsame "Exp.num" == Exp1
-resp_EXP2 <- subset(resp, EXP.numb=="EXP2") #second 6-day trial, subset entire dataset resp by column nsame "Exp.num" == Exp2
-resp_EXP2.0 <- subset(resp, EXP.numb=="EXP2") # same under a diff name (read why on next comment)
-resp_EXP2.0 <-subset(resp_EXP2.0, Day!=0) # omit Day0 of the second exposure for graph on cumulative exposure to OA 
+# review the file "Stats_resp_analysis" the criterion used to determine the resp data used below
+par(mfrow=c(1,1)) #set plotting configuration
 
-### EXP1 ####
-# The following are condenced steps to merge a reproducible respiration rates from LoLin R ouputs.
-# Test strength of automated LoLin Script for nine constants each with the "Reference" data
-# Reference = each resp value computed with a visial criteria and default constants  (alpha = 0.2, untruncated); adjusted to acheive peak emp distribution  of regressions
-# Automated ouputs = at nine total settings of alpha= 0.2,0.4 and0.6 at three different truncations (all, 10-20 minutes, 10-25 minutes)
-
-# AUTOMATED RESP RATES WITH "LOLIN" PACKAGE OUTPUTS
-# First step - nine LoLin outputs to reference; choose constants with least respiration values outside of 95% Loess CI with Reference
-# linear regression with reference plot
+# FIRST CURVE FIT = alpha 0.4 and no truncation - had the strongest r^2 regressed with reference AND least NUMBER OF values outside of the loess fit
 plot(resp_EXP1[,1],resp_EXP1[,5], main= "Ref vs. alpha0.4_all") # linear regression with the reference 
 summary(lm(resp_EXP1[,1]~resp_EXP1[,5])) #Adjusted R-squared:  0.3905
-
-# label with row numbers  - shows values outside of CI interval in loess curve
 ggplot(resp_EXP1, aes(x = resp_EXP1[,1], y = resp_EXP1[,5])) +
   geom_point() +
   geom_smooth(method = 'loess') +
   geom_text(aes(label = resp_EXP1$ID), position = position_nudge(y = -0.01)) 
-# outside of loess curve = 57,52,3,2,1,76,50,96,31,5,29,17,70,72,68,56,94
-
-# call all points outside of the CI and create a new dataframe with these values and all non LoLin outputs
+# values outside of loess curve 57,52,3,2,1,76,50,96,31,5,29,17,70,72,68,56,94
+# create a new dataframe with these values and all non LoLin outputs
 newdata_resp_EXP1_ALL <- data.frame(resp_EXP1$Date, resp_EXP1[,c(1:10)]) # new dataframe with first 11 columns, Date + nine automated outputs
 newdata_resp_EXP1_ALL_1 <-newdata_resp_EXP1_ALL[c(57,52,3,6,17,2,1,76,50,96,31,5,29,70,72,68,56,94), ] # only call points (rows) outside loess in first regression
-
 # plotted all linear regression for each automated output with the reference - strongest correlation at alpha = 0.6 truncation at 10-20 minutes
 plot(newdata_resp_EXP1_ALL_1[,2],newdata_resp_EXP1_ALL_1[,10]) # strongest correlation was with alpha = 0.6 truncation at 10-20 minutes 
 summary(lm(newdata_resp_EXP1_ALL_1[,10]~newdata_resp_EXP1_ALL_1[,2]))# strongest relationship with Reference - adj R-squared=0.7235 
-
-#Merge a FINAL COLUMN as "Finalresp" for both datasets both datasets 
+# Merge a FINAL COLUMN as "Finalresp" for both datasets both datasets 
 resp_EXP1$FINALresp <- resp_EXP1$LpcResp_alpha0.4_all.csv # base alpha 0.4, no truncation 
-resp_EXP1$FINALresp[c(57,52,3,6,17,2,1,76,50,96,31,5,29,70,72,68,56,94)] <- resp_EXP1$LpcResp_alpha0.6_min10.20.csv[c(57,52,3,6,17,2,1,76,50,96,31,5,29,70,72,68,56,94)] #inserted new rows from alpha = 0.6 10-20 min for points outside loess curve
-
-# test correlation of Finalresp with the Ref
+resp_EXP1$FINALresp[c(57,52,3,6,17,2,1,76,50,96,31,5,29,70,72,68,56,94)] <- resp_EXP1$LpcResp_alpha0.6_min10.20.csv[c(57,52,3,6,17,2,1,76,50,96,31,5,29,70,72,68,56,94)] #inserted new rows from alpha = 0.6 10-20 mins
+# SECOND CURVE FIT = alpha 0.6 and truncation at 10-20 min
 plot(resp_EXP1$Resp_individually_all.csv,resp_EXP1$FINALresp, main= "Ref vs. FINALresp") # plot the relationship
 summary(lm(resp_EXP1[,1]~resp_EXP1$FINALresp)) # summarize linear model - Multiple R-squared:  0.8784,	Adjusted R-squared:  0.8771 
 ggplot(resp_EXP1, aes(x = resp_EXP1[,1], y = resp_EXP1$FINALresp)) +
   geom_point() +
   geom_smooth(method = 'loess') +
   geom_text(aes(label = resp_EXP1$ID), position = position_nudge(y = -0.01)) # ggplot with loess CI
-
-# PLOTS
-#treatments and time (with PreExposure added)
-colnames(respPreExposure)[1] <- "FINALresp" # rename the calc resp values in PreExposure table to match the resp_EXP1
-respPreExposure$Init.treat <- c("Ambient") # name the treatement as ambient for the preexposure "day 0" data
-respPreExposure$Day <- 0 # zero dafults correctly plotted position - renamed in ggplot script at "prebasal"
-resp_EXP1_condensed <- resp_EXP1[,c(11,12,13,14,15,17,21)] # call the columns in respPreExposure to rbind (must be the same)
-resp_EXP1_ALL <- rbind(resp_EXP1_condensed, respPreExposure) # merge the two tables for the graph
-
-#plot by exp 1 by treatment
-Exp1.Fig.resp.A <- ggplot(resp_EXP1_ALL, aes(x = factor(resp_EXP1_ALL$Day), 
-                                             y = resp_EXP1_ALL$FINALresp, 
-                                             fill = resp_EXP1_ALL$Init.treat)) +
-                    scale_fill_manual(values=c("white","gray1"), 
-                                      labels=c("Ambient","Elevated")) +
-                    geom_boxplot(alpha = 0.5, # color hue
-                                 width=0.6, # boxplot width
-                                 outlier.size=0,
-                                 position = position_dodge(preserve = "single")) +
-                    geom_point(pch = 19, position = position_jitterdodge(0.01), size=1) +
-                    theme_classic() +
-                    stat_summary(fun.y=mean, geom = "errorbar", aes(ymax = ..y.., ymin = ..y..),
-                                 width = 0.6, size=0.4, linetype = "dashed", position = position_dodge(preserve = "single")) +
-                    theme(legend.position = c(0.55,0.9),legend.direction="horizontal", legend.title=element_blank(), 
-                          axis.line = element_line(color = 'black'), #Set the axes color
-                          axis.ticks.length=unit(0.2, "cm")) + #turn ticks inward
-                    geom_vline(xintercept=c(1.5), linetype="dotted", size=1) +
-                    scale_x_discrete(labels = c("0",2,5,8,10))    +
-                    labs(y=expression("Respiration rate"~(~µg~O[2]*hr^{-1}*mm^{-1})), x=expression("Days"),fill= "")  
-Exp1.Fig.resp.B <- Exp1.Fig.resp.A + theme(axis.text.x = element_text(angle = 0, hjust = 0.5, size=13,color="black"),
-                                           axis.text.y = element_text(angle = 0, hjust = 0.5, size=13,color="black"),
-                                           axis.line = element_line(color = 'black'),
-                                           axis.title.x = element_text(size = 14),
-                                           axis.title.y = element_text(size = 14))
-Exp1.Fig.resp_FINAL <-  Exp1.Fig.resp.B + scale_y_continuous(limits = c(0, 0.65), expand = c(0, 0))
-Exp1.Fig.resp_FINAL
-
-# plot just treatment (without prePreExposure)
-Exp1.Fig.resp_total <- ggplot(resp_EXP1, aes(x = factor(resp_EXP1$Init.treat), y = resp_EXP1$FINALresp, fill = resp_EXP1$Init.treat)) +
-  geom_boxplot(alpha = 0.1, outlier.shape = 19,
-               outlier.fill = "black", outlier.size = 1, lwd=0.2) + 
-  geom_point(pch = 19, position = position_jitterdodge(0.05), size=1) +
-  scale_color_grey() + scale_fill_grey() + theme_classic() +
-  #geom_point(aes(fill = resp_EXP1$Treat1_Treat2), size = 2, shape = 21, position = position_jitterdodge(0.15)) +
-  theme(legend.position = c(.9, .9), legend.text=element_text(size=8)) +
-  stat_summary(fun.y=mean, geom="point", pch="+", size=3, position = position_jitterdodge(0.01)) +
-  labs(y="Standard metabolic rate µg O2 L-1 h-1 indiv-1",  x = "Treatment", fill= "") 
-Exp1.Fig.resp_total
 
 # ANALYSIS
 # Two-Way anova for respiration rate under Initial OA Exposure
@@ -765,8 +703,7 @@ boxplot(residuals(EXP1.resp.aov.mod)) #plot boxplot of residuals
 plot(fitted(EXP1.resp.aov.mod),residuals(EXP1.resp.aov.mod)) 
 qqnorm(residuals(EXP1.resp.aov.mod)) # qqplot
 
-# explore the effect
-#summary tables to calculate the percent difference between resp in treatments
+#summary tables to calculate the percent difference between treatment
 sumresp_EXP1 <- summarySE(resp_EXP1, 
                           measurevar="FINALresp", 
                           groupvars=c("Date","Init.treat")) # summary table of resp with Date and treatment
@@ -777,51 +714,127 @@ sumresp_EXP1_means <- summarySE(sumresp_EXP1,
 percentdiff <- ((sumresp_EXP1_means[1,3] - sumresp_EXP1_means[2,3])/sumresp_EXP1_means[1,3])*100 # calculate percent difference
 percentdiff # 25% lower respiration rates in low pH
 
-### EXP2 ####
+# PLOTS
+#treatments and time (with PreExposure added)
+colnames(respPreExposure)[1] <- "FINALresp" # rename the calc resp values in PreExposure table to match the resp_EXP1
+respPreExposure$Init.treat <- c("Ambient") # name the treatement as ambient for the preexposure "day 0" data
+resp_EXP1_condensed <- resp_EXP1[,c(11,12,13,14,15,17,21)] # call the columns in respPreExposure to rbind (must be the same)
+resp_EXP1_ALL <- rbind(resp_EXP1_condensed, respPreExposure) # merge the two tables for the graph
+resp_EXP1_ALL$Day <- as.numeric(resp_EXP1_ALL$Day) # make Day numberic for the order in figure
+resp_EXP1_ALL$Day[97:104] <- 0 # make pre data 0 
+#typeof(respPreExposure$Day )
+#resp_EXP1_ALL$Day[98:104] <- 0
+#plot by exp 1 by treatment
+Exp1.Fig.resp.A <- ggplot(resp_EXP1_ALL, aes(x = factor(resp_EXP1_ALL$Day), 
+                                             y = resp_EXP1_ALL$FINALresp, 
+                                             fill = resp_EXP1_ALL$Init.treat)) +
+                    scale_fill_manual(values=c("white","gray1"), 
+                                      labels=c("Ambient","Elevated")) +
+                    geom_boxplot(alpha = 0.5, # color hue
+                                 width=0.6, # boxplot width
+                                 outlier.size=0,
+                                 position = position_dodge(preserve = "single")) +
+                    geom_point(pch = 19, position = position_jitterdodge(0.01), size=1) +
+                    theme_classic() +
+                    stat_summary(fun.y=mean, geom = "errorbar", aes(ymax = ..y.., ymin = ..y..),
+                                 width = 0.6, size=0.4, linetype = "dashed", position = position_dodge(preserve = "single")) +
+                    theme(legend.position = c(0.55,0.9),legend.direction="horizontal", legend.title=element_blank(), 
+                          axis.line = element_line(color = 'black'), #Set the axes color
+                          axis.ticks.length=unit(0.2, "cm")) + #turn ticks inward
+                    geom_vline(xintercept=c(1.5), linetype="dotted", size=1) +
+                    scale_x_discrete(labels = c("0",2,5,8,10))    +
+                    labs(y=expression("Respiration rate"~(~µg~O[2]*hr^{-1}*mm^{-1})), x=expression("Days"),fill= "")  
+Exp1.Fig.resp.B <- Exp1.Fig.resp.A + theme(axis.text.x = element_text(angle = 0, hjust = 0.5, size=13,color="black"),
+                                           axis.text.y = element_text(angle = 0, hjust = 0.5, size=13,color="black"),
+                                           axis.line = element_line(color = 'black'),
+                                           axis.title.x = element_text(size = 14),
+                                           axis.title.y = element_text(size = 14))
+Exp1.Fig.resp_FINAL <-  Exp1.Fig.resp.B + scale_y_continuous(limits = c(0, 0.65), expand = c(0, 0))
+Exp1.Fig.resp_FINAL
+
+# plot just treatment (without prePreExposure) - view the 25% difference between treatments
+Exp1.Fig.resp_total <- ggplot(resp_EXP1, aes(x = factor(resp_EXP1$Init.treat), y = resp_EXP1$FINALresp, fill = resp_EXP1$Init.treat)) +
+  geom_boxplot(alpha = 0.1, outlier.shape = 19,
+               outlier.fill = "black", outlier.size = 1, lwd=0.2) + 
+  geom_point(pch = 19, position = position_jitterdodge(0.05), size=1) +
+  scale_color_grey() + scale_fill_grey() + theme_classic() +
+  #geom_point(aes(fill = resp_EXP1$Treat1_Treat2), size = 2, shape = 21, position = position_jitterdodge(0.15)) +
+  theme(legend.position = c(.9, .9), legend.text=element_text(size=8)) +
+  stat_summary(fun.y=mean, geom="point", pch="+", size=3, position = position_jitterdodge(0.01)) +
+  labs(y="Standard metabolic rate µg O2 L-1 h-1 indiv-1",  x = "Treatment", fill= "") 
+Exp1.Fig.resp_total
+
+# RESPIRATION RATES Secondary Exposure ----------------------------------------------------------------------------
+
+# review the file "Stats_resp_analysis" the criterion used to determine the resp data used below
 par(mfrow=c(1,1)) #set plotting configuration
 
-# AUTOMATED RESP RATES WITH "LOLIN" PACKAGE OUTPUTS
-# First step - nine LoLin outputs to reference; choose constants with least respiration values outside of 95% Loess CI with Reference
-# linear regression with reference plot
-# Below  alpha = 0.4, no truncation for automated ouput - yielded the least respiration values outside of Loess CI with Reference
-plot(resp_EXP2[,1],resp_EXP2[,5], main= "Ref vs. alpha0.4_all") # linear regression with the reference 
-summary(lm(resp_EXP2[,1]~resp_EXP2[,5])) #Adjusted R-squared:  0.8002 
+# FIRST CURVE FIT = alpha 0.4 and no truncation - had the strongest r^2 regressed with reference AND least NUMBER OF values outside of the loess fit
+ggplot(resp_EXP2, aes(x = resp_EXP2[,1], y = resp_EXP2[,5])) + geom_point() + geom_smooth(method = 'loess') + geom_text(aes(label = resp_EXP2$ID), position = position_nudge(y = .01))
+# values outside of loess curve 
+numberID <- (c(98,105,113,114,130, 141,146,147,150,152,153,155,156,188)) - 96 # to obtain the actual order (EXP1 was 96 rows)
+numberID # actuall number of ID 1  2  9 18 24 36 45 46 47 50 51 54 56 57 59 60 77 80 84 92
+# subset resp_EXP2 for a new data file
+newdata_resp_EXP2_ALL <- data.frame(resp_EXP2$Date , resp_EXP2[,c(1:10)])
+newdata_resp_EXP2_ALL_1 <-newdata_resp_EXP2_ALL[c(2,  9, 17, 18, 34, 45, 50, 51, 54, 56, 57, 59, 60, 92), ] 
+# SECOND CURVE FIT = alpha 0.6 and truncation at 10 - 25 mins
+plot(newdata_resp_EXP2_ALL_1[,2],newdata_resp_EXP2_ALL_1[,11])
+summary(lm(newdata_resp_EXP2_ALL_1[,11]~newdata_resp_EXP2_ALL_1[,2])) # Adjusted R-squared: 0.7145 
 
-# label with row numbers  - shows values outside of CI interval in loess curve
-ggplot(resp_EXP2, aes(x = resp_EXP2[,1], y = resp_EXP2[,5])) +
+# assgin new  "FINAL" column base as the alpha 0.4 with no truncation as a base
+head(resp_EXP2) # alpha 0.4 with no truncation = resp_EXP2[,5]
+resp_EXP2$FINALresp <- resp_EXP2[,5]
+# Note: FINALresp is column # 18 in resp_EXP2; as resp_EXP2[,18]
+head(resp_EXP2) # alpha 0.6 10-25mins = resp_EXP2[,10]
+resp_EXP2[c(2,  9, 17, 18, 34, 45, 50, 51, 54, 56, 57, 59, 60, 92),21] <- resp_EXP2[c(2,  9, 17, 18, 34, 45, 50, 51, 54, 56, 57, 59, 60, 92), 10]
+
+# check the strength of Finalresp to the reference; RESULT: Multiple R-squared:  0.9464,	Adjusted R-squared:  0.9458 
+plot(resp_EXP2[,1],resp_EXP2$FINALresp, main= "Ref vs. FINALresp")
+summary(lm(resp_EXP2[,1]~resp_EXP2$FINALresp))       
+ggplot(resp_EXP2, aes(x = resp_EXP2[,1], y = resp_EXP2$FINALresp)) +
   geom_point() +
   geom_smooth(method = 'loess') +
-  geom_text(aes(label = resp_EXP2$ID), position = position_nudge(y = .01)) 
-# outside of loess curve = 114, 153,155,156,150,141,105,130,152,98,188
-tail(resp_EXP1) # end of exposure 1 is row #96
-numberID <- (c(114,153,155,156,150,141,105,130,152,98,188)) - 96 #subtract by 96 to get the actual row number in resp_exp2
-# actuall row numbers outside loess cruve = 18 57 59 60 54 45  9 34 56  2 92
-
-# plotted all linear regression for each automated output with the reference - strongest correlation at alpha = 0.6 truncation at 10-20 minutes
-newdata_resp_EXP2_ALL <- data.frame(resp_EXP2$Date , resp_EXP2[,c(1:10)]) # new dataframe with first 11 columns, Date + nine automated outputs
-newdata_resp_EXP2_ALL_1 <-newdata_resp_EXP2_ALL[c(18, 57, 59, 60 ,54 ,45 , 9 ,34 ,56,  2, 92), ]  # only call points (rows) outside loess in first regression
-
-# plotted all linear regression for each automated output with the reference - strongest correlation at alpha = 0.6 truncation at 10-20 minutes
-plot(newdata_resp_EXP2_ALL_1[,2],newdata_resp_EXP2_ALL_1[,11]) # alpha = 0.6 truncation at 10-25 minutes (each resp trial was 30 mins)
-summary(lm(newdata_resp_EXP2_ALL_1[,11]~newdata_resp_EXP2_ALL_1[,2]))# strongest relationship with Reference - adj R-squared=0.7169 
-
-#Merge a FINAL COLUMN as "Finalresp" for both datasets both datasets 
-resp_EXP2$FINALresp <- resp_EXP2$LpcResp_alpha0.4_all.csv # base alpha 0.4, no truncation
-resp_EXP2$FINALresp[c(18, 57, 59, 60 ,54 ,45 , 9 ,34 ,56,  2, 92)] <- resp_EXP2$LpcResp_alpha0.6_min10.25.csv[c(18, 57, 59, 60 ,54 ,45 , 9 ,34 ,56,  2, 92)] #inserted new rows from alpha = 0.6 10-25 min for points outside loess curve
-
-# test relationship between Finalresp and the Ref
-plot(resp_EXP2$FINALresp,resp_EXP2$Resp_individually_all.csv, main= "Ref vs. FINALresp")
-summary(lm(resp_EXP2$Resp_individually_all.csv~resp_EXP2$FINALresp)) # summarize linear model - Multiple R-squared:  0.9261,	Adjusted R-squared:  0.9253 
-ggplot(resp_EXP2, aes(x = resp_EXP2$Resp_individually_all.csv, y = resp_EXP2$FINALresp)) +
-  geom_point() +
-  geom_smooth(method = 'loess') +
-  geom_text(aes(label = resp_EXP2$ID), position = position_nudge(y = -0.01)) # ggplot with loess CI
+  geom_text(aes(label = resp_EXP2$ID), position = position_nudge(y = -0.01))
 
 # subset dataset for Day 0 and days 2 4 and 6
-resp_EXP2_2.4.6. <- subset(resp_EXP2, Day!=0) # subset out pre-exposure measurements on day 0 (day 24 of experiment)
+resp_EXP2_2.4.6 <- subset(resp_EXP2, Day!=0) # subset out pre-exposure measurements on day 0 (day 24 of experiment)
 resp_EXP2_d0 <- subset(resp_EXP2, Day==0) # subset of just day 0 data (for the plot)
 
-# PLOTTING
+# ANALYSIS
+# t-test for differences at the end of exp1 (day 10) and start of exp 2 (day 0) by treatment
+exp2_d0.resp <- subset(resp_EXP2, Date=="20180807") # starting resp  on Day 0 in Exp 2
+t.test(exp2_d0.resp$FINALresp~exp2_d0.resp$Init.treat) # t = 2.9495, df = 18.709, p-value = 0.008326; t-test shows significant difference between treatment at the start of Exp2
+# normality test - data tranformation
+shapiro.test(resp_EXP2_2.4.6$Resp_individually_all.csv) # not normal
+hist(resp_EXP2_2.4.6$FINALresp) # positive or right skewed - need to transform the data
+# transform via sqrt for normal distrubtion via shapro wilk test
+resp_EXP2_2.4.6$sqrt_FINALresp <- sqrt(resp_EXP2_2.4.6$FINALresp)
+shapiro.test(resp_EXP2_2.4.6$sqrt_FINALres) #  transformation is now normal
+hist(resp_EXP2_2.4.6$sqrt_FINALres) # view histogram of sqrt transformation
+# Three-way ANOVA (not transformed)
+resp_EXP2_2.4.6$Day <- as.factor(resp_EXP2_2.4.6$Day) # treat day as a character 
+EXP2.ANOVA <- aov(FINALresp ~ Init.treat*Sec.treat*Day, data = resp_EXP2_2.4.6) # run anova on treatment and time
+anova(EXP2.ANOVA) # significant effect of time and secondary treatment
+# diagnostic tests and plots of model residuals (not transformed)
+par(mfrow=c(1,3)) #set plotting configuration
+par(mar=c(1,1,1,1)) #set margins for plots
+hist(residuals(EXP2.ANOVA)) #plot histogram of residuals
+shapiro.test(residuals(EXP2.ANOVA)) # Shapiro test - residuals are not normal
+library(car)
+leveneTest(EXP2.ANOVA) ## Levene's test for homogeneity  - residuals are normal
+boxplot(residuals(EXP2.ANOVA)) #plot boxplot of residuals
+plot(fitted(EXP2.ANOVA),residuals(EXP2.ANOVA)) #display residuals versus fitter, normal QQ plot, leverage plot
+qqnorm(residuals(EXP2.ANOVA)) # QQ plot
+
+# post-hoc
+exp2.resp.ph <- lsmeans(EXP2.ANOVA, pairwise ~  Init.treat*Sec.treat*Day)# pariwise Tukey Post-hoc test between repeated treatments
+exp2.resp.ph # view post hoc summary
+E1.pairs.RESP.05 <- cld(exp2.resp.ph, alpha=.05, Letters=letters) #list pairwise tests and letter display p < 0.05
+E1.pairs.RESP.05 # NO PAIRWISE DIFFERENCES
+E1.pairs.RESP.1 <- cld(exp2.resp.ph, alpha=.1, Letters=letters) #list pairwise tests and letter display p < 0.1
+E1.pairs.RESP.1 # maringal differences between elevated (day 5) and ambient (days 2 and 5)
+
+# PLOT 
 resp_EXP2_d0$Treat1_Treat2 <- resp_EXP2_d0$Init.treat # Day 0 in Exp2 still has potential carry over from 2 treatments in intial exp, not 4 treatments in Exp2
 resp_EXP2_merge <- rbind(resp_EXP2_d0, resp_EXP2_2.4.6.) # merge the two tables for the graph
 #plot treatments and time (PreExposure added as day 0 data)
@@ -833,7 +846,7 @@ Exp2.Fig.resp.A <- ggplot(resp_EXP2_merge, aes(x = factor(resp_EXP2_merge$Day), 
                                  outlier.size=0, # make outliers small
                                  position = position_dodge(preserve = "single")) + 
                     geom_point(pch = 19, position = position_jitterdodge(0.01), size=1) +
-                    theme_classic() + ylim(0, 0.6) +
+                    theme_classic() + ylim(0, 0.75) +
                     #geom_point(aes(fill = resp_EXP2$Treat1_Treat2), size = 1.5, shape = 21, position = position_jitterdodge(0.05)) +
                     stat_summary(fun.y=mean, geom = "errorbar", aes(ymax = ..y.., ymin = ..y..), 
                                  width = 0.6, size=0.4, linetype = "dashed", position = position_dodge(preserve = "single")) +
@@ -851,83 +864,18 @@ Exp2.Fig.resp.B <-
                           axis.ticks.length=unit(0.2, "cm"),
                           axis.title.x = element_text(size = 14),
                           axis.title.y = element_text(size = 14)) +
-                    scale_y_continuous(limits = c(0, 0.65), expand = c(0, 0))
+                    scale_y_continuous(limits = c(0, 0.75), expand = c(0, 0))
 Exp2.Fig.resp.B # view the plot
-
-# ANALYSIS
-# Three-Way anova for respiration rate under Secondary OA Exposure
-hist(resp_EXP2_2.4.6.$FINALresp) # histogram looks positive skew
-shapiro.test(resp_EXP2_2.4.6.$FINALresp) # not normally distributed
-hist(sqrt(resp_EXP2_2.4.6.$FINALresp)) # view historgram of squre root transformation for positive skew
-shapiro.test(sqrt(resp_EXP2_2.4.6.$FINALresp)) # square root transformed is normally distributed
-EXP2.resp.sqrt <- (sqrt(resp_EXP2_2.4.6.$FINALresp))
-resp_EXP2_2.4.6.$Day <- as.character(resp_EXP2_2.4.6.$Day) # covert day to character to run the model
-EXP2.resp.aov.mod <- aov(FINALresp ~ Init.treat*Sec.treat*Day, data = resp_EXP2_2.4.6.) # run anova on treatment and time
-anova(EXP2.resp.aov.mod) # significant effect of time and marginal effect from secondary treatment
-# Levene's test for homogeneity 
-leveneTest(EXP2.resp.aov.mod) # p 0.4541
-# Shapiro test
-EXP2.resp.mod.residuals <- residuals(object = EXP2.resp.aov.mod) # call residuals from the model
-shapiro.test(x = EXP2.resp.mod.residuals) # 0.5754
-#post-hoc for sig affect of time
-exp2.resp.day <- lsmeans(EXP2.resp.aov.mod, pairwise ~ Init.treat*Sec.treat*Day) # pariwise Tukey Post-hoc test between repeated treatments
-exp2.resp.day # view post hoc summary
-E2.pairs.RESP.05 <- cld(exp2.resp.day, alpha=.05, Letters=letters) #list pairwise tests and letter display p < 0.05
-E2.pairs.RESP.05 #view results - no pairwise differences for the entire model
-E2.pairs.RESP.1 <- cld(exp2.resp.day, alpha=.1, Letters=letters) #list pairwise tests and letter display p < 0.05
-E2.pairs.RESP.1 # view results
-# plot the residuals
-par(mfrow=c(1,3)) #set plotting configuration
-par(mar=c(1,1,1,1)) #set margins for plots
-hist(residuals(EXP2.resp.aov.mod)) #plot histogram of residuals
-boxplot(residuals(EXP2.resp.aov.mod)) #plot boxplot of residuals
-plot(fitted(EXP2.resp.aov.mod),residuals(EXP2.resp.aov.mod)) 
-qqnorm(residuals(EXP2.resp.aov.mod)) # qqplot
-
-# trend to days 2 -6 for resp rate
-#summary table based on the anova results of a significant effect of initial treatment
-EXP2_sumRESP_means <- summarySE(resp_EXP2_2.4.6., 
-                                     measurevar="FINALresp", 
-                                     groupvars=c("Day")) # summarize previous table for overall Treat1_Treat2 
-EXP2_sumRESP_means # view the table
-percentdiff.RESP_means <- ((EXP2_sumRESP_means[3,3] - EXP2_sumRESP_means[1,3])/EXP2_sumRESP_means[1,3])*100 # calculate percent difference
-percentdiff.RESP_means # 31.19829% increase in resp rate from day 2 to day 6 during secondary exposure
-
-
-# t-test for differences at the end of exp1 (day 10) and start of exp 2 (day 0) by treatment
-exp1_d10.resp  <- subset(resp_EXP1, Date=="20180724") #  resp  on Day 10 in Exp 1
-t.test(exp1_d10.resp$FINALresp~exp1_d10.resp$Init.treat) # p-value = 0.08471; t-test shows marginal difference between treatment at end of exp 1
-
-exp2_d0.resp <- subset(resp_EXP2, Date=="20180807") # starting resp  on Day 0 in Exp 2
-t.test(exp2_d0.resp$FINALresp~exp2_d0.resp$Init.treat) # p-value = 0.01469; t-test shows significant difference between treatment at the start of Exp2
-
-#ADD MODEL RESULTS TO THE PLOT
+# Add model results to the graph
 Exp2.Fig.resp_FINAL <- 
                     Exp2.Fig.resp.B + 
                     geom_segment(aes(x = .6, y = 0.55, xend = 1.4, yend = 0.55)) +
                     annotate("text", x="0", y=0.54, label = "**", size = 4) # t-test with p < 0.05 between treatments at day 0
 Exp2.Fig.resp_FINAL
 
-# TEST FOR EFFECTS OF THE FOUR TREATMENT GROUPS  FOR ALL DAYS
-# anovas for signifcant between treatments for all days in EXP2 
-Resp_EXP2_d2 <- subset(resp_EXP2, Day==2)
-Resp_d2_EXP2 <- aov(FINALresp~Treat1_Treat2, data=Resp_EXP2_d2)
-summary(Resp_d2_EXP2) # day 2 no difference between treatments
-
-Resp_EXP2_d4 <- subset(resp_EXP2, Day==4)
-Resp_d4_EXP2 <- aov(FINALresp~Treat1_Treat2, data=Resp_EXP2_d4)
-summary(Resp_d4_EXP2) # day4 no difference between treatments
-
-Resp_EXP2_d6 <- subset(resp_EXP2, Day==6)
-Resp_d6_EXP2 <- aov(FINALresp~Treat1_Treat2, data=Resp_EXP2_d6)
-summary(Resp_d6_EXP2) # day 6 no difference between treatments
-
-Resp_EXP2_ALL <- subset(resp_EXP2, Day!=0)
-Resp_alldays_EXP2 <- aov(FINALresp~Treat1_Treat2, data=Resp_EXP2_ALL)
-summary(Resp_alldays_EXP2) # ALL days no difference between treatments
-
-
-### Growth Data - Analysis, Graphs, Models  (summarized analysis from Stats_growth_analysis.R)#######################################
+#####################
+### Growth Data #####
+# - Analysis, Graphs, Models  (summarized analysis from Stats_growth_analysis.R)
 
 #Load Size Data
 size<-read.csv("Data/Shell.Length/Length.30d.Exposure.csv", header=T, sep=",", na.string="NA", as.is=T) 
@@ -961,7 +909,6 @@ length_EXP1_Day10 <- ggplot(end_size, aes(x = treatment, y = shell_size, fill = 
   theme(legend.position = c(.92, .9), legend.text=element_text(size=8)) +
   labs(y="shell length", x = "Treatment", fill="") 
 length_EXP1_Day10
-
 
 ### EXP1 ####
 #plot treatments and time (with prePreExposure)
@@ -1023,7 +970,6 @@ hist(residuals(EXP1.size.aov.mod)) #plot histogram of residuals
 boxplot(residuals(EXP1.size.aov.mod)) #plot boxplot of residuals
 plot(fitted(EXP1.size.aov.mod),residuals(EXP1.size.aov.mod)) 
 qqnorm(residuals(EXP1.size.aov.mod)) # qqplot
-
 
 Exp1.Fig.size_FINAL <- 
   Exp1.Fig.size.B +
@@ -1121,12 +1067,10 @@ figure_3 <- ggarrange(Exp2.Fig.resp_FINAL, Exp2.Fig.size.FINAL,
                       ncol = 1, nrow = 2)
 figure_3 # view the figure
 
-
 # Saving output plots
 ggsave(file="Output/Supplem.Fig.conical.pH.temp.pdf", Supplem.Fig.conical.pH.temp, width = 12, height = 8, units = c("in"))
 ggsave(file="Output/Output_Figure_2.pdf", figure_2, width = 12, height = 8, units = c("in"))
 ggsave(file="Output/Output_Figure_3.pdf", figure_3, width = 12, height = 8, units = c("in"))
-
 
 # 157 days post experiment in common garden heathstack
 

@@ -1,7 +1,8 @@
-# Geoduck Conditioning
-# Title: SDR_LoLinR.R
+# Project: Juvenile_Geoduck_OA
+# Title: Resp_rate_calculation
 # Supported by: FFAR
-# This script was written by Sam J Gurr in Fall 2018
+# Author: Sam Gurr
+# Date Updated: 20190410
 # Contact: samuel_gurr@uri.edu
 
 rm(list=ls())
