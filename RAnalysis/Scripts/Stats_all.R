@@ -19,6 +19,8 @@ if ("lsmeans" %in% rownames(installed.packages()) == 'FALSE') install.packages('
 if ("gridExtra" %in% rownames(installed.packages()) == 'FALSE') install.packages('gridExtra') 
 if ("reshape" %in% rownames(installed.packages()) == 'FALSE') install.packages('reshape') 
 if ("multcompView" %in% rownames(installed.packages()) == 'FALSE') install.packages('multcompView') 
+if ("lmtest" %in% rownames(installed.packages()) == 'FALSE') install.packages('lmtest') 
+if ("car" %in% rownames(installed.packages()) == 'FALSE') install.packages('car') 
 #if ("tidyr" %in% rownames(installed.packages()) == 'FALSE') install.packages('tidyr') 
 #if ("Rcmdr" %in% rownames(installed.packages()) == 'FALSE') install.packages('Rcmdr') 
 
@@ -38,6 +40,8 @@ library(multcompView)   # Version: 0.1-7, Date/Publication: 2015-07-31, Imports:
 #library(tidyr)          # Version: 0.8.1, Date/Publication: 2018-05-18, Depends: R (>= 3.1) Imports: dplyr (>= 0.7.0), glue, magrittr, purrr, Rcpp, rlang, stringi, tibble, tidyselect
 #library(Rcmdr)          # Version: 2.5-1. Date/Publication: 2018-09-11, Depends: R (>= 3.5.0), grDevices, graphics, methods, stats, utils,splines, RcmdrMisc (>= 2.5-0), car (>= 3.0-1), effects (>=4.0-3) Imports: tcltk, tcltk2 (>= 1.2-6), abind, relimp (>= 1.0-5)
 library(Rmisc)
+library(lmtest)
+library(car)
 #Required Data files
 # ----Conical Chemistry (APEX data)
 #20180724_Apex_Data_Output.csv
@@ -46,7 +50,7 @@ library(Rmisc)
 # ----Heath Tray Chemistry (discrete probe data)
 #Flow.rates.csv
 #pH_Calibration_Files (tris data)
-#Daily_Temp_pH_Sal.csv
+#Seawater_chemistry_table_Output_All.csv
 # ----Respiration data
 #Resp.pre.Exposure.csv
 #Resp.30d.Exposure.csv
@@ -409,7 +413,7 @@ colnames(pH.cals) <- c("Calib.Date",  "Intercept",  "Slope", "R2") #names the co
 pH.cals #view data - R2 shows linear strength >0.98 for pH calibration
 
 #call cumulative spreadsheet of discrete seawater chemistry
-chem<-read.csv("Data/Chemistry.flow/Daily_Temp_pH_Sal.csv", header=T, sep=",", na.string="NA", as.is=T) 
+chem<-read.csv("Output/Seawater_chemistry_table_Output_All.csv", header=T, sep=",", na.string="NA", as.is=T) 
 chem # view the file
 chem.exp <-subset(chem, Treatment!="na") #remove na - na often set as the treatment for samples of the sump
 
@@ -676,17 +680,21 @@ ggplot(resp_EXP1, aes(x = resp_EXP1[,1], y = resp_EXP1$FINALresp)) +
 # ANALYSIS
 # Two-Way anova for respiration rate under Initial OA Exposure
 hist(resp_EXP1$FINALresp) # view histogram of the final respiration data for experiment 1 - negative skew
-shapiro.test(resp_EXP1$FINALresp) # shaprio test shows resp values are not normally distributed
-shapiro.test(sqrt(resp_EXP1$FINALresp)) # square root transform for positive skew
-EXP1.resp.sqrt <- (sqrt(resp_EXP1$FINALresp)) # call the transformation for the model EXP1.resp.sqrt
+shapiro.test(resp_EXP1$FINALresp) # shaprio test shows resp values are not normally distributed, test model residuals
+#shapiro.test(sqrt(resp_EXP1$FINALresp)) # square root transform for positive skew
+#EXP1.resp.sqrt <- (sqrt(resp_EXP1$FINALresp)) # call the transformation for the model EXP1.resp.sqrt
+# model
 resp_EXP1$Day <- as.factor(resp_EXP1$Day) # convert day to character 
 EXP1.resp.aov.mod <- aov(FINALresp ~ Init.treat * Day, data = resp_EXP1) # run anova on treatment and time
 anova(EXP1.resp.aov.mod) # significant effect of  treatment 
-# Levene's test for homogeneity 
+# Levene's test 
 leveneTest(EXP1.resp.aov.mod) # p 0.2236
 # Shapiro test
 EXP1.resp.mod.residuals <- residuals(object = EXP1.resp.aov.mod) # call residuals from the model
-shapiro.test(x = EXP1.resp.mod.residuals) #  0.09055
+shapiro.test(x = EXP1.resp.mod.residuals) #  0.09055 - residuals are normal p-value = 0.09055
+# plot and test model for heteroscedasticity
+plot(lm(EXP1.resp.aov.mod))
+bptest(lm(EXP1.resp.aov.mod))  # Breusch-Pagan test p-value = 0.1729
 # post-hoc
 exp1.resp.ph <- lsmeans(EXP1.resp.aov.mod, pairwise ~  Init.treat * Day)# pariwise Tukey Post-hoc test between repeated treatments
 exp1.resp.ph # view post hoc summary
@@ -773,7 +781,7 @@ par(mfrow=c(1,1)) #set plotting configuration
 ggplot(resp_EXP2, aes(x = resp_EXP2[,1], y = resp_EXP2[,5])) + geom_point() + geom_smooth(method = 'loess') + geom_text(aes(label = resp_EXP2$ID), position = position_nudge(y = .01))
 # values outside of loess curve 
 numberID <- (c(98,105,113,114,130, 141,146,147,150,152,153,155,156,188)) - 96 # to obtain the actual order (EXP1 was 96 rows)
-numberID # actuall number of ID 1  2  9 18 24 36 45 46 47 50 51 54 56 57 59 60 77 80 84 92
+numberID # actuall number of ID 2  9 17 18 34 45 50 51 54 56 57 59 60 92
 # subset resp_EXP2 for a new data file
 newdata_resp_EXP2_ALL <- data.frame(resp_EXP2$Date , resp_EXP2[,c(1:10)])
 newdata_resp_EXP2_ALL_1 <-newdata_resp_EXP2_ALL[c(2,  9, 17, 18, 34, 45, 50, 51, 54, 56, 57, 59, 60, 92), ] 
@@ -798,19 +806,14 @@ ggplot(resp_EXP2, aes(x = resp_EXP2[,1], y = resp_EXP2$FINALresp)) +
 
 # subset dataset for Day 0 and days 2 4 and 6
 resp_EXP2_2.4.6 <- subset(resp_EXP2, Day!=0) # subset out pre-exposure measurements on day 0 (day 24 of experiment)
-resp_EXP2_d0 <- subset(resp_EXP2, Day==0) # subset of just day 0 data (for the plot)
 
 # ANALYSIS
 # t-test for differences at the end of exp1 (day 10) and start of exp 2 (day 0) by treatment
 exp2_d0.resp <- subset(resp_EXP2, Date=="20180807") # starting resp  on Day 0 in Exp 2
 t.test(exp2_d0.resp$FINALresp~exp2_d0.resp$Init.treat) # t = 2.9495, df = 18.709, p-value = 0.008326; t-test shows significant difference between treatment at the start of Exp2
 # normality test - data tranformation
-shapiro.test(resp_EXP2_2.4.6$Resp_individually_all.csv) # not normal
+shapiro.test(resp_EXP2_2.4.6$Resp_individually_all.csv) # not normal, test residuals of model
 hist(resp_EXP2_2.4.6$FINALresp) # positive or right skewed - need to transform the data
-# transform via sqrt for normal distrubtion via shapro wilk test
-resp_EXP2_2.4.6$sqrt_FINALresp <- sqrt(resp_EXP2_2.4.6$FINALresp)
-shapiro.test(resp_EXP2_2.4.6$sqrt_FINALres) #  transformation is now normal
-hist(resp_EXP2_2.4.6$sqrt_FINALres) # view histogram of sqrt transformation
 # Three-way ANOVA (not transformed)
 resp_EXP2_2.4.6$Day <- as.factor(resp_EXP2_2.4.6$Day) # treat day as a character 
 EXP2.ANOVA <- aov(FINALresp ~ Init.treat*Sec.treat*Day, data = resp_EXP2_2.4.6) # run anova on treatment and time
@@ -819,15 +822,38 @@ anova(EXP2.ANOVA) # significant effect of time and secondary treatment
 par(mfrow=c(1,3)) #set plotting configuration
 par(mar=c(1,1,1,1)) #set margins for plots
 hist(residuals(EXP2.ANOVA)) #plot histogram of residuals
-shapiro.test(residuals(EXP2.ANOVA)) # Shapiro test - residuals are not normal
-library(car)
-leveneTest(EXP2.ANOVA) ## Levene's test for homogeneity  - residuals are normal
 boxplot(residuals(EXP2.ANOVA)) #plot boxplot of residuals
 plot(fitted(EXP2.ANOVA),residuals(EXP2.ANOVA)) #display residuals versus fitter, normal QQ plot, leverage plot
 qqnorm(residuals(EXP2.ANOVA)) # QQ plot
+# Levene's test 
+leveneTest(EXP2.ANOVA) ## Levene's test for homogeneity 
+# Shapiro test for residual variance
+shapiro.test(residuals(EXP2.ANOVA)) # not normal - p-value = 0.00429
+
+# Three-way ANOVA (transformed)
+# transform via sqrt for normal distrubtion via shapro wilk test
+sqrt_FINALresp <- sqrt(resp_EXP2_2.4.6$FINALresp)
+shapiro.test(sqrt_FINALresp) #  transformation is now normal
+hist(sqrt_FINALresp) # view histogram of sqrt transformation
+EXP2.ANOVA.TRANS <- aov(sqrt_FINALresp ~ Init.treat*Sec.treat*Day, data = resp_EXP2_2.4.6) # run anova on treatment and time
+anova(EXP2.ANOVA.TRANS) # significant effect of time and secondary treatment
+# diagnostic tests and plots of model residuals (not transformed)
+par(mfrow=c(1,3)) #set plotting configuration
+par(mar=c(1,1,1,1)) #set margins for plots
+hist(residuals(EXP2.ANOVA.TRANS)) #plot histogram of residuals
+boxplot(residuals(EXP2.ANOVA.TRANS)) #plot boxplot of residuals
+plot(fitted(EXP2.ANOVA.TRANS),residuals(EXP2.ANOVA.TRANS)) #display residuals versus fitter, normal QQ plot, leverage plot
+qqnorm(residuals(EXP2.ANOVA.TRANS)) # QQ plot
+# Levene's test 
+leveneTest(EXP2.ANOVA.TRANS) ## Levene's test for homogeneity 
+# Shapiro test for residual variance
+shapiro.test(residuals(EXP2.ANOVA.TRANS)) # normal p-value = 0.5657
+# plot and test model for heteroscedasticity
+plot(lm(EXP2.ANOVA.TRANS))
+bptest(lm(EXP2.ANOVA.TRANS))  # Breusch-Pagan test p-value = 0.1458
 
 # post-hoc
-exp2.resp.ph <- lsmeans(EXP2.ANOVA, pairwise ~  Init.treat*Sec.treat*Day)# pariwise Tukey Post-hoc test between repeated treatments
+exp2.resp.ph <- lsmeans(EXP2.ANOVA.TRANS, pairwise ~  Day)# pariwise Tukey Post-hoc test between repeated treatments
 exp2.resp.ph # view post hoc summary
 E1.pairs.RESP.05 <- cld(exp2.resp.ph, alpha=.05, Letters=letters) #list pairwise tests and letter display p < 0.05
 E1.pairs.RESP.05 # NO PAIRWISE DIFFERENCES
@@ -835,8 +861,9 @@ E1.pairs.RESP.1 <- cld(exp2.resp.ph, alpha=.1, Letters=letters) #list pairwise t
 E1.pairs.RESP.1 # maringal differences between elevated (day 5) and ambient (days 2 and 5)
 
 # PLOT 
+resp_EXP2_d0 <- subset(resp_EXP2, Day==0) # subset of just day 0 data (for the plot)
 resp_EXP2_d0$Treat1_Treat2 <- resp_EXP2_d0$Init.treat # Day 0 in Exp2 still has potential carry over from 2 treatments in intial exp, not 4 treatments in Exp2
-resp_EXP2_merge <- rbind(resp_EXP2_d0, resp_EXP2_2.4.6.) # merge the two tables for the graph
+resp_EXP2_merge <- rbind(resp_EXP2_d0, resp_EXP2_2.4.6) # merge the two tables for the graph
 #plot treatments and time (PreExposure added as day 0 data)
 Exp2.Fig.resp.A <- ggplot(resp_EXP2_merge, aes(x = factor(resp_EXP2_merge$Day), y = resp_EXP2_merge$FINALresp, fill = resp_EXP2_merge$Treat1_Treat2)) +
                     scale_fill_manual(values=c("white", "white", "grey80", "gray1", "gray50", "gray1"), 
@@ -937,25 +964,50 @@ Exp1.Fig.size.B <- Exp1.Fig.size.A +
   scale_y_continuous(limits = c(2, 8), expand = c(0, 0))
 Exp1.Fig.size.B # view the plot
 
+
+
+
 # Two-Way anova for shell size under Initial OA Exposure
 hist(size_EXP1$shell_size) # view histogram - has negative skew
-shapiro.test(size_EXP1$shell_size) # not normally distributed
+shapiro.test(size_EXP1$shell_size) # not normally distributed, run the model and check residuals
+# run the model 
+EXP1.size.aov.mod <- aov(shell_size ~ Init.Trt * Day, data = size_EXP1) # run anova on treatment and time
+anova(EXP1.size.aov.mod) # significant effect of time; no effect from treatment
+# test model residuals
+shapiro.test(residuals(EXP1.size.aov.mod)) # not normally distributed - use transformed model
+
+# Two-Way anova (transformed)
 # reflect sqr root transformation to minimize negative skew
 max(size_EXP1$shell_size) # max value = 6.859
 EXP1.size.sqrt <- sqrt((6.859 + 1) - size_EXP1$shell_size) # reflect and square root (reflect = [(max value + 1) - x]
 hist(EXP1.size.sqrt) # seems to have solved the skewness in historgram
 shapiro.test(EXP1.size.sqrt) # normally distributed
-# run the model with transformed data
-EXP1.size.aov.mod <- aov(shell_size ~ Init.Trt * Day, data = size_EXP1) # run anova on treatment and time
-anova(EXP1.size.aov.mod) # significant effect of time; no effect from treatment
+# run the model on transformed data
+EXP1.size.aov.modTRANS <- aov(EXP1.size.sqrt ~ Init.Trt * Day, data = size_EXP1) # run anova on treatment and time
+anova(EXP1.size.aov.modTRANS) # significant effect of time; no effect from treatment
+# test model residuals
+shapiro.test(residuals(EXP1.size.aov.modTRANS)) # normal p-value = 0.1394
 # Levene's test for homogeneity 
-leveneTest(EXP1.size.aov.mod) # p 0.5609
+leveneTest(EXP1.size.aov.modTRANS) # p 0.4352
+# plot the residuals
+par(mfrow=c(1,3)) #set plotting configuration
+par(mar=c(1,1,1,1)) #set margins for plots
+hist(residuals(EXP1.size.aov.modTRANS)) #plot histogram of residuals
+boxplot(residuals(EXP1.size.aov.modTRANS)) #plot boxplot of residuals
+plot(fitted(EXP1.size.aov.modTRANS),residuals(EXP1.size.aov.modTRANS)) 
+qqnorm(residuals(EXP1.size.aov.modTRANS)) # qqplot
+# plot and test model for heteroscedasticity
+plot(lm(EXP1.size.aov.modTRANS))
+bptest(lm(EXP1.size.aov.modTRANS))  # Breusch-Pagan test p-value = 0.27
 # post-hoc
-TukeyHSD(EXP1.size.aov.mod, "Day") # quick method
-exp1.size.ph <- lsmeans(EXP1.size.aov.mod, pairwise ~  Init.Trt * Day) # pariwise Tukey Post-hoc test
+TukeyHSD(EXP1.size.aov.modTRANS, "Day") # quick method
+exp1.size.ph <- lsmeans(EXP1.size.aov.modTRANS, pairwise ~  Init.Trt * Day) # pariwise Tukey Post-hoc test
 exp1.size.ph # view post hoc summary diff between days 10 and 2
 E1.pairs.SIZE.05 <- cld(exp1.size.ph, alpha=.05, Letters=letters) #list pairwise tests and letter display p < 0.05
 E1.pairs.SIZE.05 #view results
+E1.pairs.SIZE.1 <- cld(exp1.size.ph, alpha=.1, Letters=letters) #list pairwise tests and letter display p < 0.05
+E1.pairs.SIZE.1 #view results
+
 # what is the percent change between days 2 and day 10 (since there is no diff between treatment - group all as a mean)
 EXP1_size_Day2 <- size_EXP1 %>% filter(size_EXP1$Day==2) #dataset for day 2
 EXP1_size_Day10 <- size_EXP1 %>% filter(size_EXP1$Day==10) # dataset for day 10
@@ -963,13 +1015,7 @@ Days_2_and_10 <- rbind(EXP1_size_Day2, EXP1_size_Day10) # rbind both datasets
 # table for mean shell length days 2 and 10
 EXP1_size_table <- aggregate(Days_2_and_10$shell_size, list(Days_2_and_10$Day), mean)
 EXP1_percentdiff_size <- (((EXP1_size_table[1,2])-(EXP1_size_table[2,2]))/(EXP1_size_table[2,2]))*100 # 3.6 % increase in shell length days 2 - 10
-# plot the residuals
-par(mfrow=c(1,3)) #set plotting configuration
-par(mar=c(1,1,1,1)) #set margins for plots
-hist(residuals(EXP1.size.aov.mod)) #plot histogram of residuals
-boxplot(residuals(EXP1.size.aov.mod)) #plot boxplot of residuals
-plot(fitted(EXP1.size.aov.mod),residuals(EXP1.size.aov.mod)) 
-qqnorm(residuals(EXP1.size.aov.mod)) # qqplot
+
 
 Exp1.Fig.size_FINAL <- 
   Exp1.Fig.size.B +
@@ -1021,19 +1067,15 @@ exp2_d0.size <- subset(size_EXP2, Date=="20180807") # starting size on Day 0 in 
 t.test(exp2_d0.size$shell_size~exp2_d0.size$Init.Trt) # p-value = 0.2531; t-test shows significant difference between treatment at the start of Exp2
 
 # Three-Way anova for shell size under Secondary OA Exposure
-boxplot(size_EXP2.0$shell_size)
 hist(size_EXP2.0$shell_size) # weak negative skew
 shapiro.test(size_EXP2.0$shell_size) # not normally distributed
-max(size_EXP2.0$shell_size) # max value = 7.764
-EXP2.size.sqrt <- log((7.764 + 1) - size_EXP2.0$shell_size) # reflect and square root transform
-hist(EXP2.size.sqrt) # view histogram of transformation 
-shapiro.test(EXP2.size.sqrt) # even more non normal
+# run the model
 EXP2.size.aov.mod <- aov(shell_size ~ Init.Trt*Sec.Trt* Day, data = size_EXP2.0) # run anova on treatment and time
 anova(EXP2.size.aov.mod) # significant effect fromboth inital and secondary treatment
+# shapiro test (model residuals)
+shapiro.test(residuals(EXP2.size.aov.mod)) # not normally distributed
 # Levene's test for homogeneity 
 leveneTest(EXP2.size.aov.mod) # p 0.8418
-# shapiro test (model residuals)
-shapiro.test(residuals(EXP2.size.aov.mod))
 # plot the residuals
 par(mfrow=c(1,3)) #set plotting configuration
 par(mar=c(1,1,1,1)) #set margins for plots
@@ -1041,7 +1083,9 @@ hist(residuals(EXP2.size.aov.mod)) #plot histogram of residuals
 boxplot(residuals(EXP2.size.aov.mod)) #plot boxplot of residuals
 plot(fitted(EXP2.size.aov.mod),residuals(EXP2.size.aov.mod))
 qqnorm(residuals(EXP2.size.aov.mod)) # qqplot
-
+# plot and test model for heteroscedasticity
+plot(lm(EXP2.size.aov.mod))
+bptest(lm(EXP2.size.aov.mod))  # Breusch-Pagan test p-value = 0.4175
 # post-hoc
 exp2.size.ph <- lsmeans(EXP2.size.aov.mod, pairwise ~  Init.Trt*Sec.Trt*Day)# pariwise Tukey Post-hoc test between repeated treatments
 exp2.size.ph # view post hoc summary
@@ -1057,6 +1101,19 @@ exp2.size.ph.sec <- lsmeans(EXP2.size.aov.mod, pairwise ~  Sec.Trt)# pariwise Tu
 exp2.size.ph.sec  # view post hoc summary
 EXP2_perc_diff_SecTrmt <- ((5.796007 - 5.610461) / (5.796007)) *100
 EXP2_perc_diff_SecTrmt
+
+
+
+# Three-way anova (transformed data)
+max(size_EXP2.0$shell_size) # max value = 7.764
+EXP2.size.sqrt <- sqrt((7.764 + 1) - size_EXP2.0$shell_size) # reflect and square root transform
+hist(EXP2.size.sqrt) # view histogram of transformation 
+shapiro.test(EXP2.size.sqrt) # even more non normal
+# run the model
+EXP2.size.aov.modTRANS <- aov(EXP2.size.sqrt ~ Init.Trt*Sec.Trt* Day, data = size_EXP2.0) # run anova on treatment and time
+anova(EXP2.size.aov.modTRANS) # significant effect fromboth inital and secondary treatment
+
+
 
 # Assemble output plots
 figure_2 <- ggarrange(Exp1.Fig.resp_FINAL, Exp1.Fig.size_FINAL,
