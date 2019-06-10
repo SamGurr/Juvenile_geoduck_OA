@@ -828,10 +828,10 @@ sqrt_FINALresp <- sqrt(resp_EXP2_2.4.6$FINALresp)
 hist(sqrt_FINALresp) # resolved the positive skew
 EXP2.ANOVA.TRANS <- aov(sqrt_FINALresp ~ Init.treat*Sec.treat*Day, data = resp_EXP2_2.4.6) # run anova on treatment and time
 anova(EXP2.ANOVA.TRANS) # significant effect of time and secondary treatment
-# Levene's test 
-leveneTest(EXP2.ANOVA.TRANS) ## Levene's test for homogeneity 
 # Shapiro test for residual variance
 shapiro.test(residuals(EXP2.ANOVA.TRANS)) # normal p-value = 0.5657 - normal
+# Levene's test 
+leveneTest(EXP2.ANOVA.TRANS) ## Levene's test for homogeneity 
 # hist qq residual diagnostic (transformed)
 par(mfrow=c(1,3)) #set plotting configuration
 par(mar=c(1,1,1,1)) #set margins for plots
@@ -1067,10 +1067,10 @@ t.test(exp2_d0.size$shell_size~exp2_d0.size$Init.Trt) # p-value = 0.2531; t-test
 hist(size_EXP2.0$shell_size) # weak negative skew
 EXP2.size.aov.mod <- aov(shell_size ~ Init.Trt*Sec.Trt* Day, data = size_EXP2.0) # run anova on treatment and time
 anova(EXP2.size.aov.mod) # significant effect fromboth inital and secondary treatment
+# shapiro test (model residuals)
+shapiro.test(residuals(EXP2.size.aov.mod)) # non normal, p-value = 0.002602
 # Levene's test for homogeneity 
 leveneTest(EXP2.size.aov.mod) # p 0.8418
-# shapiro test (model residuals)
-shapiro.test(residuals(EXP2.size.aov.mod)) # not normally distributed, p-value = 0.002602
 # hist qq residual diagnostic
 par(mfrow=c(1,3)) #set plotting configuration
 par(mar=c(1,1,1,1)) #set margins for plots
@@ -1078,14 +1078,11 @@ hist(residuals(EXP2.size.aov.mod)) #plot histogram of residuals
 boxplot(residuals(EXP2.size.aov.mod)) #plot boxplot of residuals
 plot(fitted(EXP2.size.aov.mod),residuals(EXP2.size.aov.mod))
 qqnorm(residuals(EXP2.size.aov.mod)) # qqplot
-# plot and test model for heteroscedasticity
-plot(lm(EXP2.size.aov.mod))
-bptest(lm(EXP2.size.aov.mod))  # Breusch-Pagan test p-value = 0.4175
 
 # Three-Way anova (transformed) under Secondary OA Exposure
 hist(size_EXP2.0$shell_size) # weak negative skew
 max(size_EXP2.0$shell_size) # max value = 7.764
-# reflect sqrt
+# transformations
 EXP2.size.sqrt <- sqrt((7.764 + 1) - size_EXP2.0$shell_size) # reflect and square root (reflect = [(max value + 1) - x]
 EXP2.size.log <- log((7.764 + 1) - size_EXP2.0$shell_size) # reflect log
 EXP2.size.cubrt <- ((7.764 + 1) - size_EXP2.0$shell_size)^(1/3) # reflect cube root
