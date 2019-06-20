@@ -2,7 +2,7 @@
 #Project: FFAR
 #Author: HM Putnam & Sam Gurr
 #Edit by: Sam Gurr
-#Date Last Modified: 20190411
+#Date Last Modified: 20190620
 #See Readme file for details
 
 rm(list=ls())
@@ -873,7 +873,7 @@ Exp2.Fig.resp.A <- ggplot(resp_EXP2_merge, aes(x = factor(resp_EXP2_merge$Day), 
                     geom_vline(xintercept=c(1.5), linetype="dotted", size=1) +
                     labs(y=expression("Respiration rate"~(~µg~O[2]*hr^{-1}*indiv^{-1})), x=expression("Days"), fill="") 
 Exp2.Fig.resp.A # view the plot
-Exp2.Fig.resp.B <- 
+Exp2.Fig.resp_FINAL <- 
                     Exp2.Fig.resp.A + 
                     theme(axis.text.x = element_text(angle = 0, hjust = 0.5, size=13,color="black"),
                           axis.text.y = element_text(angle = 0, hjust = 0.5, size=13,color="black"),
@@ -882,13 +882,7 @@ Exp2.Fig.resp.B <-
                           axis.title.x = element_text(size = 14),
                           axis.title.y = element_text(size = 14)) +
                     scale_y_continuous(limits = c(0, 0.75), expand = c(0, 0))
-Exp2.Fig.resp.B # view the plot
-# Add model results to the graph
-Exp2.Fig.resp_FINAL <- 
-                    Exp2.Fig.resp.B + 
-                    geom_segment(aes(x = .6, y = 0.55, xend = 1.4, yend = 0.55)) +
-                    annotate("text", x="0", y=0.54, label = "**", size = 4) # t-test with p < 0.05 between treatments at day 0
-Exp2.Fig.resp_FINAL
+Exp2.Fig.resp_FINAL # view the plot
 
 #####################
 ### Growth Data #####
@@ -943,7 +937,7 @@ Exp1.Fig.size.A <- ggplot(size_EXP1_all, aes(x = factor(Day), y = shell_size, fi
   ylim(2,8.2) + 
   scale_x_discrete(limits=c("0",2,5,8,10)) +
   labs(y=expression("Shell length"~(mm)), x=expression("Days"))
-Exp1.Fig.size.B <- Exp1.Fig.size.A + 
+Exp1.Fig.size_FINAL <- Exp1.Fig.size.A + 
   theme(axis.text.x = element_text(angle = 0, hjust = 0.5, size=13,color="black"),
         axis.text.y = element_text(angle = 0, hjust = 0.5, size=13,color="black"),
         axis.line = element_line(color = 'black'),
@@ -951,7 +945,7 @@ Exp1.Fig.size.B <- Exp1.Fig.size.A +
         axis.title.x = element_text(size = 14),
         axis.title.y = element_text(size = 14)) +
   scale_y_continuous(limits = c(2, 8), expand = c(0, 0))
-Exp1.Fig.size.B # view the plot
+Exp1.Fig.size_FINAL # view the plot
 
 # Two-Way anova for shell size under Initial OA Exposure
 hist(size_EXP1$shell_size) # view histogram
@@ -1011,18 +1005,6 @@ Days_2_and_10 <- rbind(EXP1_size_Day2, EXP1_size_Day10) # rbind both datasets
 # table for mean shell length days 2 and 10
 EXP1_size_table <- aggregate(Days_2_and_10$shell_size, list(Days_2_and_10$Day), mean)
 EXP1_percentdiff_size <- (((EXP1_size_table[1,2])-(EXP1_size_table[2,2]))/(EXP1_size_table[2,2]))*100 # 3.6 % increase in shell length days 2 - 10
-
-Exp1.Fig.size_FINAL <- 
-  Exp1.Fig.size.B +
-  geom_segment(aes(x = 1.6, y = 7.3, xend = 2.4, yend = 7.3)) +
-  geom_segment(aes(x = 2.6, y = 7.3, xend = 3.4, yend = 7.3)) + 
-  geom_segment(aes(x = 3.6, y = 7.3, xend = 4.4, yend = 7.3)) +
-  geom_segment(aes(x = 4.6, y = 7.3, xend = 5.4, yend = 7.3)) +
-  annotate("text", x="2", y=7.2, label = "a", size = 4) + # t-test with p < 0.05 between treatments at day 0
-  annotate("text", x="5", y=7.2, label = "ab", size = 4) + # add text to the graphic for posthoc letters - effect of time
-  annotate("text", x="8", y=7.2, label = "ab", size = 4) + # add text to the graphic for posthoc letters - effect of time
-  annotate("text", x="10", y=7.2, label = "b", size = 4) # add text to the graphic for posthoc letters - effect of time
-Exp1.Fig.size_FINAL
 
 ### EXP2 ####
 #PLOTTING
