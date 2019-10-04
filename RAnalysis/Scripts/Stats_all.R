@@ -360,9 +360,11 @@ flow_summary <-flow %>%
   arrange(desc(min_LPM)) # makes table in descending order 
 flow_summary # view table
 
+# exposure 1 flow rate
 EXP1 <- subset(flow, Exp.num=="EXP1") #initial 10-day trial, subset entire dataset resp by column nsame "Exp.num" == Exp1
 flow_EXP1 <- subset(EXP1, Day!=0) # ommit day 0
 
+# exposure 2 flow rate
 EXP2 <- subset(flow, Exp.num=="EXP2") #second 6-day trial, subset entire dataset resp by column nsame "Exp.num" == Exp2
 flow_EXP2 <- subset(EXP2, Day!=0) # ommit day 0
 
@@ -404,6 +406,7 @@ for(i in 1:length(file.names.tris)) { # for every file in list start at the firs
 colnames(pH.cals) <- c("Calib.Date",  "Intercept",  "Slope", "R2") #names the columns of the dataframe
 pH.cals #view data - R2 shows linear strength >0.98 for pH calibration
 
+
 #call cumulative spreadsheet of discrete seawater chemistry
 chem<-read.csv("Output/Seawater_chemistry_table_Output_All.csv", header=T, sep=",", na.string="NA", as.is=T) 
 chem # view the file
@@ -417,6 +420,67 @@ chem.exp2 <- chem.exp[157:204,] # exposure 2 without Day 0 (20180808 - 20180813)
 chem.exp2$Exposure <- "Exp2"
 chem.exp2$tank.name <- substr(chem.exp2$Tank, start = 10, stop = 13) # new column for tank name without date
 
+# test for tray differences --------------------------------------------------------------------------------- #
+#Exp 1 ---------------------------------------- # seawater treatment (4 trays each)
+chem.exp1.LOW <- chem.exp1 %>% filter(Treatment=="Low")
+chem.exp1.AMBIENT <- chem.exp1 %>% filter(Treatment=="Ambient")
+## TWO-way anovas to explore tray effects (4 trays in exposure 1)
+summary(aov(pH~tank.name, data=chem.exp1.LOW)) # no diff in pH between FOUR trays - LOW treatment
+summary(aov(TA~tank.name, data=chem.exp1.LOW)) # no diff in TA between FOUR trays - LOW treatment
+summary(aov(pCO2~tank.name, data=chem.exp1.LOW)) # no diff in pCO2 between FOUR trays - LOW treatment
+summary(aov(pH~tank.name, data=chem.exp1.AMBIENT)) # no diff in pH between FOUR trays - AMBIENT treatment
+summary(aov(TA~tank.name, data=chem.exp1.AMBIENT)) # no diff in TA between FOUR trays - AMBIENT treatment
+summary(aov(pCO2~tank.name, data=chem.exp1.AMBIENT)) # no diff in pCO2 between FOUR trays - AMBIENT treatment
+#Exp 2 ---------------------------------------- # seawater treatment (4 trays each) NOT combined treatment effect
+chem.exp2.LOW <- chem.exp2 %>% filter(Treatment=="Low")
+chem.exp2.AMBIENT <- chem.exp2 %>% filter(Treatment=="Ambient")
+# TWO-way anovas to explore tray effects (4 trays in exposure 1)
+summary(aov(pH~tank.name, data=chem.exp2.LOW)) # no diff in pH between FOUR trays - LOW treatment
+summary(aov(TA~tank.name, data=chem.exp2.LOW)) # no diff in TA between FOUR trays - LOW treatment
+summary(aov(pCO2~tank.name, data=chem.exp2.LOW)) # no diff in pCO2 between FOUR trays - LOW treatment
+summary(aov(pH~tank.name, data=chem.exp2.AMBIENT)) # no diff in pH between FOUR trays - AMBIENT treatment
+summary(aov(TA~tank.name, data=chem.exp2.AMBIENT)) # no diff in TA between FOUR trays - AMBIENT treatment
+summary(aov(pCO2~tank.name, data=chem.exp2.AMBIENT)) # no diff in pCO2 between FOUR trays - AMBIENT treatment
+#Exp 2 ---------------------------------------- # experimental treatment (initial and seccondary exposure
+# Tray ID Key:
+# ambient × ambient = "H2_B", "H1_B"
+# ambient × low = "H2_T", "H1_T"
+# low × low = "H3_B", "H0_B"
+# low × ambient = "H3_T", "H0_T"
+chem.exp2.LOW.LOW <-  chem.exp2.LOW %>% dplyr::filter(tank.name %in% c("H3_B", "H0_B")) # low × low treat
+chem.exp2.AMBIENT.LOW <- chem.exp2.LOW %>% dplyr::filter(tank.name %in% c("H2_T", "H1_T")) # ambient × low treat
+chem.exp2.AMBIENT.AMBIENT <- chem.exp2.AMBIENT %>% dplyr::filter(tank.name %in% c("H2_B", "H1_B")) # ambient × ambient
+chem.exp2.LOW.AMBIENT <- chem.exp2.AMBIENT %>% dplyr::filter(tank.name %in% c("H3_T", "H0_T")) # low × ambient
+# t.tests for to verify if treatments are the same under secondary expsure...
+# NOTE: we already found no tray diffs in seawater treatment (n=4 trays treatment-1); this looks at trays specific to the initial×secoandry treatment
+# AMBIENT × AMBIENT
+t.test(pH~tank.name, data=chem.exp2.AMBIENT.AMBIENT) # no diff in pH between TWO trays - AMBIENT × AMBIENT treatment
+t.test(TA~tank.name, data=chem.exp2.AMBIENT.AMBIENT) # no diff in TA between TWO trays - AMBIENT × AMBIENT treatment
+t.test(pCO2~tank.name, data=chem.exp2.AMBIENT.AMBIENT) # no diff in pCO2 between TWO trays - AMBIENT × AMBIENT treatment
+t.test(Salinity~tank.name, data=chem.exp2.AMBIENT.AMBIENT) # no diff in Salinity between TWO trays - AMBIENT × AMBIENT treatment
+t.test(Temperature~tank.name, data=chem.exp2.AMBIENT.AMBIENT) # no diff in Temperature between TWO trays - AMBIENT × AMBIENT treatment
+# AMBIENT × Low
+t.test(pH~tank.name, data=chem.exp2.AMBIENT.LOW) # no diff in pH between TWO trays - AMBIENT × Low treatment
+t.test(TA~tank.name, data=chem.exp2.AMBIENT.LOW) # no diff in TA between TWO trays - AMBIENT × Low treatment
+t.test(pCO2~tank.name, data=chem.exp2.AMBIENT.LOW) # no diff in pCO2 between TWO trays - AMBIENT × Low treatment
+t.test(Salinity~tank.name, data=chem.exp2.AMBIENT.LOW) # no diff in Salinity between TWO trays - AMBIENT × Low treatment
+t.test(Temperature~tank.name, data=chem.exp2.AMBIENT.LOW) # no diff in Temperature between TWO trays - AMBIENT × Low treatment
+# Low × AMBIENT
+t.test(pH~tank.name, data=chem.exp2.LOW.AMBIENT) # no diff in pH between TWO trays - Low × AMBIENT treatment
+t.test(TA~tank.name, data=chem.exp2.LOW.AMBIENT) # no diff in TA between TWO trays - Low × AMBIENT treatment
+t.test(pCO2~tank.name, data=chem.exp2.LOW.AMBIENT) # no diff in pCO2 between TWO trays - Low × AMBIENT treatment
+t.test(Salinity~tank.name, data=chem.exp2.LOW.AMBIENT) # no diff in Salinity between TWO trays - Low × AMBIENT treatment
+t.test(Temperature~tank.name, data=chem.exp2.LOW.AMBIENT) # no diff in Temperature between TWO trays - Low × AMBIENT treatment
+# Low × LOW
+t.test(pH~tank.name, data=chem.exp2.LOW.LOW) # no diff in pH between TWO trays - Low × LOW treatment
+t.test(TA~tank.name, data=chem.exp2.LOW.LOW) # no diff in TA between TWO trays - Low × LOW treatment
+t.test(pCO2~tank.name, data=chem.exp2.LOW.LOW) # no diff in pCO2 between TWO trays - Low × LOW treatment
+t.test(Salinity~tank.name, data=chem.exp2.LOW.AMBIENT) # no diff in Salinity between TWO trays - Low × AMBIENT treatment
+t.test(Temperature~tank.name, data=chem.exp2.LOW.AMBIENT) # no diff in Temperature between TWO trays - Low × AMBIENT treatment
+# RESULTS = NO DIFFERENCES IN CARBONATE (AND SALINITY AND TEMP) CHEMSITRY BETWEEN 
+# TRAYS BY SEAWATER CONDITION AND EXPERIMENTAL TREATMENT
+
+# bind both exposures for cumulative table
 chem.exp_1_2 <- rbind(chem.exp1,chem.exp2) # bind exposure 1 and 2
 
 chem.exp_1_2_pH_table <- aggregate(chem.exp_1_2$pH, list(chem.exp_1_2$Treatment), mean)
@@ -816,6 +880,7 @@ hist(residuals(EXP2.ANOVA)) # historgram normal, one oulier is apparent
 boxplot(residuals(EXP2.ANOVA)) #plot boxplot of residuals - appears driven by a single outlier
 plot(fitted(EXP2.ANOVA),residuals(EXP2.ANOVA)) #display residuals versus fitter, normal QQ plot, leverage plot
 qqnorm(residuals(EXP2.ANOVA)) # QQ plot
+
 
 # Identify whether outliers resolve slight deviation (via Shapiro-wilk)
 # and if patterns in ANOVA model (or lack thereof) are stable after omission
