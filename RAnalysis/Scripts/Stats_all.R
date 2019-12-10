@@ -18,6 +18,8 @@ if ("reshape" %in% rownames(installed.packages()) == 'FALSE') install.packages('
 if ("multcompView" %in% rownames(installed.packages()) == 'FALSE') install.packages('multcompView') 
 if ("lmtest" %in% rownames(installed.packages()) == 'FALSE') install.packages('lmtest') 
 if ("car" %in% rownames(installed.packages()) == 'FALSE') install.packages('car') 
+if ("ggpubr" %in% rownames(installed.packages()) == 'FALSE') install.packages('ggpubr') 
+
 
 # Load packages and pacage version/date/import/depends info
 library(dplyr)          # Version 0.7.6, Packaged: 2018-06-27, Depends: R (>= 3.1.2)Imports: assertthat (>= 0.2.0), bindrcpp (>= 0.2.0.9000), glue (>=1.1.1), magrittr (>= 1.5), methods, pkgconfig (>= 2.0.1), R6(>= 2.2.2), Rcpp (>= 0.12.15), rlang (>= 0.2.0), tibble (>=1.3.1), tidyselect (>= 0.2.3), utils
@@ -32,7 +34,7 @@ library(multcompView)   # Version: 0.1-7, Date/Publication: 2015-07-31, Imports:
 library(Rmisc)
 library(lmtest)
 library(car)
-
+library(ggpubr)
 
 #Required Data files
 # ----Conical Chemistry (APEX data)
@@ -349,21 +351,24 @@ Supplem.Fig.conical.pH.temp <- grid.arrange(arrangeGrob(Exp1.pH.Apex.FIG, CommGa
 
 flow<-read.csv("Data/Chemistry.flow/Flow.rates.csv", header=T, sep=",", na.string="NA", as.is=T) #upload file
 flow # view the data
+# flow <- flow %>% dplyr::filter(Notes %in% "good")
+flow$Day_ID <- paste(flow$Day, flow$Sample.ID, sep ="_") 
 
 flow_summary <-flow %>% 
-  summarise(mean_LPM= mean(LPM),
+  dplyr::summarise(mean_LPM= mean(LPM),
             max_LPM = max(LPM),
             min_LPM = min(LPM),
             sd_LPM = sd(LPM),
             SEM = ((sd(LPM))/sqrt(n())),
             count = n()) %>% # get the count by leaving n open
-  arrange(desc(min_LPM)) # makes table in descending order 
+  dplyr::arrange(desc(min_LPM)) # makes table in descending order 
 flow_summary # view table
 
 # exposure 1 flow rate
 EXP1 <- subset(flow, Exp.num=="EXP1") #initial 10-day trial, subset entire dataset resp by column nsame "Exp.num" == Exp1
 flow_EXP1 <- subset(EXP1, Day!=0) # ommit day 0
-
+# ambient common garden
+AMB <- subset(flow, Exp.num=="AMB") #ambeint common garden
 # exposure 2 flow rate
 EXP2 <- subset(flow, Exp.num=="EXP2") #second 6-day trial, subset entire dataset resp by column nsame "Exp.num" == Exp2
 flow_EXP2 <- subset(EXP2, Day!=0) # ommit day 0
@@ -371,13 +376,19 @@ flow_EXP2 <- subset(EXP2, Day!=0) # ommit day 0
 flow_EXP1_2 <- rbind(flow_EXP1, flow_EXP2) # bind exp1 and 2, day 0 already ommited
 
 # EXP1 
+# flow exp by treatment ---------------- #
+flow_EXP1 # all "good and "adjusted" data - occasionally recorded multiple times a day to adjust flow 
+flow_EXP1.treat <- summarySE(flow_EXP1, measurevar="LPM", groupvars=c("Day_ID", "Treatment_1_2", "Sample.ID")) # summarize by day treament and ID
+flow_EXP1.treat # view table - gives mean values if recorded muliple times in that day or simply shows the single value recorded
+flow_EXP1.treat.2 <- summarySE(flow_EXP1.treat, measurevar="LPM", groupvars=c("Treatment_1_2"))
+flow_EXP1.treat.2 # stats by treatment
+# Ambient common garden ---------------- #
 # flow exp by treatment
-flow_EXP1.treat <- summarySE(flow_EXP1, measurevar="LPM", groupvars=c("Treatment")) # summary by treatment
-flow_EXP1.treat # view table
-
-# EXP2 summary 
+flow_EXP1.amb <- summarySE(AMB, measurevar="LPM", groupvars=c("Treatment")) # summary by treatment
+flow_EXP1.amb # view table
+# EXP2 summary  ---------------- #
 # flow by treatment
-flow_EXP2.treat <- summarySE(flow_EXP2, measurevar="LPM", groupvars=c("Sec.treat")) # summary by treatment
+flow_EXP2.treat <- summarySE(flow_EXP2, measurevar="LPM", groupvars=c("Sec.treat")) # summary by treatment (did not measure multiple times a day)
 flow_EXP2.treat # view summary table
 
 # EXP1 AND EXP2 summary 
@@ -429,8 +440,8 @@ summary(aov(pH~tank.name, data=chem.exp1.LOW)) # no diff in pH between FOUR tray
 summary(aov(TA~tank.name, data=chem.exp1.LOW)) # no diff in TA between FOUR trays - LOW treatment
 summary(aov(pCO2~tank.name, data=chem.exp1.LOW)) # no diff in pCO2 between FOUR trays - LOW treatment
 summary(aov(pH~tank.name, data=chem.exp1.AMBIENT)) # no diff in pH between FOUR trays - AMBIENT treatment
-summary(aov(TA~tank.name, data=chem.exp1.AMBIENT)) # no diff in TA between FOUR trays - AMBIENT treatment
-summary(aov(pCO2~tank.name, data=chem.exp1.AMBIENT)) # no diff in pCO2 between FOUR trays - AMBIENT treatment
+summary(aov(Salinity~tank.name, data=chem.exp1.AMBIENT)) # no diff in TA between FOUR trays - AMBIENT treatment
+summary(aov(Temperature~tank.name, data=chem.exp1.AMBIENT)) # no diff in pCO2 between FOUR trays - AMBIENT treatment
 #Exp 2 ---------------------------------------- # seawater treatment (4 trays each) NOT combined treatment effect
 chem.exp2.LOW <- chem.exp2 %>% filter(Treatment=="Low")
 chem.exp2.AMBIENT <- chem.exp2 %>% filter(Treatment=="Ambient")
@@ -439,8 +450,8 @@ summary(aov(pH~tank.name, data=chem.exp2.LOW)) # no diff in pH between FOUR tray
 summary(aov(TA~tank.name, data=chem.exp2.LOW)) # no diff in TA between FOUR trays - LOW treatment
 summary(aov(pCO2~tank.name, data=chem.exp2.LOW)) # no diff in pCO2 between FOUR trays - LOW treatment
 summary(aov(pH~tank.name, data=chem.exp2.AMBIENT)) # no diff in pH between FOUR trays - AMBIENT treatment
-summary(aov(TA~tank.name, data=chem.exp2.AMBIENT)) # no diff in TA between FOUR trays - AMBIENT treatment
-summary(aov(pCO2~tank.name, data=chem.exp2.AMBIENT)) # no diff in pCO2 between FOUR trays - AMBIENT treatment
+summary(aov(Salinity~tank.name, data=chem.exp2.AMBIENT)) # no diff in TA between FOUR trays - AMBIENT treatment
+summary(aov(Temperature~tank.name, data=chem.exp2.AMBIENT)) # no diff in pCO2 between FOUR trays - AMBIENT treatment
 #Exp 2 ---------------------------------------- # experimental treatment (initial and seccondary exposure
 # Tray ID Key:
 # ambient × ambient = "H2_B", "H1_B"
@@ -703,6 +714,8 @@ print(resp_PreExposure_plot + labs(y="Respiration rate rate µg O2 L-1 h-1 indiv-
                                    x = "Date") + 
         ggtitle("Juvenile geoduck respirometry \ PreExposure"))
 
+tapply(respPreExposure$LpcResp_alpha0.4_all, respPreExposure$Date, mean) # mean = 0.2886166
+tapply(respPreExposure$LpcResp_alpha0.4_all, respPreExposure$Date, sd) # sd = 0.16198
 # RESPIRATION RATES Initial Exposure ----------------------------------------------------------------------------
 
 # review the file "Stats_resp_analysis" the criterion used to determine the resp data used below
@@ -960,11 +973,15 @@ size_EXP1_with_PreExposure <- subset(size, Exp.Num=="Exp1") # all Exp1 data
 size_EXP1 <- subset(size_EXP1_with_PreExposure, trial!="prebasal") # Exp1 without Day 0
 
 size_EXP1_PreExposure <- subset(size_EXP1_with_PreExposure, Day=="prebasal") # Seperate Day 0 of Exp 1 for Figure
+tapply(size_EXP1_PreExposure$shell_size, size_EXP1_PreExposure$run, mean) # 4.255246
+tapply(size_EXP1_PreExposure$shell_size, size_EXP1_PreExposure$run, sd) # 0.8479893
+
 size_EXP1_PreExposure$Day <- "0" # name day as 0 (before it was "prebasal")
 size_EXP1_all <- rbind(size_EXP1_PreExposure, size_EXP1) # merge two datasets for the first size figure Exp 1
 
 size_EXP2 <- subset(size, Exp.Num=="Exp2") # all Exp 2
 size_EXP2.d0 <- subset(size_EXP2, Day==0)
+
 size_EXP2.d0$Treat1_Treat2 <- size_EXP2.d0$Init.Trt # merge column or initial treat as treat1_treat2 for Exp2 figure
 size_EXP2.0 <-subset(size_EXP2, Day!=0) # Exp 2 without day 0 
 size_EXP2_all <- rbind(size_EXP2.d0, size_EXP2.0) # merge two datasets for the first size figure Exp 2
@@ -1278,6 +1295,27 @@ size_graph_INITIAL.SECOND.157days <- ggplot(size_157days_postEXP, aes(x = factor
   labs(y=expression("Shell size"~(mm)), x=expression("Initial×Secondary treatment"))
 size_graph_INITIAL.SECOND.157days
 
+# Descriptive statistics
+res <- desc_statby(size_157days_postEXP, measure.var = "Length_mm",
+                   grps = c("Treat1_Treat2"))
+head(res[, 1:14]) # all output
+head(res[, c(1:6,9,10)]) # targetted output for boxplot stats
+
+size_graph_INITIAL.SECOND.157days.VIOLIN <- ggviolin(size_157days_postEXP, "Treat1_Treat2", "Length_mm",
+              color = "Treat1_Treat2", 
+              #palette =c("#00AFBB", "#FC4E07", "#00AFBB", "#FC4E07"),
+              palette =c("grey80", "grey60",  "gray35", "grey3"),
+              add = "jitter", shape = "Treat1_Treat2")
+size_graph_INITIAL.SECOND.157days.VIOLIN + geom_bracket(
+  xmin = c("Ambient_Ambient","Low_Low", "Ambient_Low"), 
+  xmax = c("Ambient_Low", "Low_Ambient", "Low_Low"),
+  y.position = c(13, 13,13.2), label = c("", "", "post-hoc, P < 0.05"),
+  tip.length = c(0.02)
+)
+
+
+
+# Default plot
 # Respiration
 # call the whole record NOTE: initial data in first 5 minutes shows higher respriration rates
 # than the rest of the record due to mixing, this leads to outliers in automated analysis
@@ -1429,6 +1467,24 @@ JUVresp_geoduck_INITIAL.SECOND.157days <- ggplot(JUVresp_geoduck, aes(x = factor
   scale_x_discrete(labels = c("Ambient × Ambient","Ambient × Elevated","Elevated × Ambient","Elevated × Elevated")) +
   labs(y=expression("Respiration rate"~(~µg~O[2]*hr^{-1}*mm^{-1})),  x = "Initial×Secondary treatment", fill= "") 
 JUVresp_geoduck_INITIAL.SECOND.157days # view the graph
+
+# violin plot of data
+JUVresp_geoduck_INITIAL.SECOND.157days.VIOLIN <- ggviolin(JUVresp_geoduck, "Treatment", "Resp_rate_ug.mol",
+                                                     color = "Treatment", 
+                                                     order = c("Ambient_Ambient", "Elevated_Ambient", 
+                                                               "Ambient_Elevated","Elevated_Elevated"),
+                                                     #palette =c("#00AFBB", "#FC4E07", "#00AFBB", "#FC4E07"),
+                                                     palette =c("grey80", "grey60",  "gray35", "grey3"),
+                                                     add = "jitter", shape = "Treatment")
+JUVresp_geoduck_INITIAL.SECOND.157days.VIOLIN <- add_summary(JUVresp_geoduck_INITIAL.SECOND.157days.VIOLIN, fun = "mean_se") # add mean and standard error
+            
+JUVresp_geoduck_INITIAL.SECOND.157days.VIOLIN + geom_bracket(
+  xmin = c("Ambient_Ambient","Ambient_Elevated", "Elevated_Ambient"), 
+  xmax = c("Elevated_Ambient", "Elevated_Elevated", "Ambient_Elevated"),
+  y.position = c(2.5, 2.5,2.6), label = c("", "", "post-hoc, P < 0.05"),
+  tip.length = c(0.02)
+)
+
 
 figure_supplementary_157d <- ggarrange(size_graph_INITIAL.SECOND.157days,
                                        JUVresp_geoduck_INITIAL.SECOND.157days,
