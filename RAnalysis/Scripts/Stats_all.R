@@ -435,20 +435,29 @@ chem.exp2$tank.name <- substr(chem.exp2$Tank, start = 10, stop = 13) # new colum
 #Exp 1 ---------------------------------------- # seawater treatment (4 trays each)
 chem.exp1.LOW <- chem.exp1 %>% filter(Treatment=="Low")
 chem.exp1.AMBIENT <- chem.exp1 %>% filter(Treatment=="Ambient")
-## TWO-way anovas to explore tray effects (4 trays in exposure 1)
+## one-way anovas to explore tray effects (4 trays in exposure 1)
 summary(aov(pH~tank.name, data=chem.exp1.LOW)) # no diff in pH between FOUR trays - LOW treatment
 summary(aov(TA~tank.name, data=chem.exp1.LOW)) # no diff in TA between FOUR trays - LOW treatment
 summary(aov(pCO2~tank.name, data=chem.exp1.LOW)) # no diff in pCO2 between FOUR trays - LOW treatment
+summary(aov(Temperature~tank.name, data=chem.exp1.LOW)) # no diff in Temperature between FOUR trays - LOW treatment
+
+summary(aov(TA~tank.name, data=chem.exp1.AMBIENT)) # no diff in TA between FOUR trays - AMBIENT treatment
+summary(aov(pCO2~tank.name, data=chem.exp1.AMBIENT)) # no diff in pCO2 between FOUR trays - AMBIENT treatment
 summary(aov(pH~tank.name, data=chem.exp1.AMBIENT)) # no diff in pH between FOUR trays - AMBIENT treatment
 summary(aov(Salinity~tank.name, data=chem.exp1.AMBIENT)) # no diff in TA between FOUR trays - AMBIENT treatment
 summary(aov(Temperature~tank.name, data=chem.exp1.AMBIENT)) # no diff in pCO2 between FOUR trays - AMBIENT treatment
 #Exp 2 ---------------------------------------- # seawater treatment (4 trays each) NOT combined treatment effect
 chem.exp2.LOW <- chem.exp2 %>% filter(Treatment=="Low")
 chem.exp2.AMBIENT <- chem.exp2 %>% filter(Treatment=="Ambient")
-# TWO-way anovas to explore tray effects (4 trays in exposure 1)
+# one-way anovas to explore tray effects (4 trays in exposure 1)
 summary(aov(pH~tank.name, data=chem.exp2.LOW)) # no diff in pH between FOUR trays - LOW treatment
 summary(aov(TA~tank.name, data=chem.exp2.LOW)) # no diff in TA between FOUR trays - LOW treatment
 summary(aov(pCO2~tank.name, data=chem.exp2.LOW)) # no diff in pCO2 between FOUR trays - LOW treatment
+summary(aov(Salinity~tank.name, data=chem.exp2.LOW)) # no diff in TA between FOUR trays - LOW treatment
+summary(aov(Temperature~tank.name, data=chem.exp2.LOW)) # no diff in pCO2 between FOUR trays - LOW treatment
+
+summary(aov(TA~tank.name, data=chem.exp2.AMBIENT)) # no diff in TA between FOUR trays - AMBIENT treatment
+summary(aov(pCO2~tank.name, data=chem.exp2.AMBIENT)) # no diff in pCO2 between FOUR trays - AMBIENT treatment
 summary(aov(pH~tank.name, data=chem.exp2.AMBIENT)) # no diff in pH between FOUR trays - AMBIENT treatment
 summary(aov(Salinity~tank.name, data=chem.exp2.AMBIENT)) # no diff in TA between FOUR trays - AMBIENT treatment
 summary(aov(Temperature~tank.name, data=chem.exp2.AMBIENT)) # no diff in pCO2 between FOUR trays - AMBIENT treatment
